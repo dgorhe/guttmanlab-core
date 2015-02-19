@@ -24,6 +24,7 @@ public final class CommandLineParser {
 	private Map<String,String> stringArgDescriptions;
 	private Map<String,String> stringListArgDescriptions;
 	private Map<String,String> intArgDescriptions;
+	private Map<String,String> longArgDescriptions;
 	private Map<String,String> floatArgDescriptions;
 	private Map<String,String> doubleArgDescriptions;
 	private Map<String,String> boolArgDescriptions;	
@@ -31,6 +32,7 @@ public final class CommandLineParser {
 	private Map<String,String> stringArgDefaults;
 	private Map<String,ArrayList<String>> stringListArgDefaults;
 	private Map<String,Integer> intArgDefaults;
+	private Map<String,Long> longArgDefaults;
 	private Map<String,Float> floatArgDefaults;
 	private Map<String,Double> doubleArgDefaults;
 	private Map<String,Boolean> boolArgDefaults;	
@@ -49,6 +51,7 @@ public final class CommandLineParser {
 		stringArgDescriptions = new HashMap<String,String>();
 		stringListArgDescriptions = new HashMap<String,String>();
 		intArgDescriptions = new HashMap<String,String>();
+		longArgDescriptions = new HashMap<String,String>();
 		floatArgDescriptions = new HashMap<String,String>();
 		doubleArgDescriptions = new HashMap<String,String>();
 		boolArgDescriptions = new HashMap<String,String>();	
@@ -56,6 +59,7 @@ public final class CommandLineParser {
 		stringArgDefaults = new HashMap<String,String>();
 		stringListArgDefaults = new HashMap<String,ArrayList<String>>();
 		intArgDefaults = new HashMap<String,Integer>();
+		longArgDefaults = new HashMap<String,Long>();
 		floatArgDefaults = new HashMap<String,Float>();
 		doubleArgDefaults = new HashMap<String,Double>();
 		boolArgDefaults = new HashMap<String,Boolean>();	
@@ -171,6 +175,38 @@ public final class CommandLineParser {
 		commandLineValues.put(flag, null);
 		if(required) requiredArgs.add(flag);
 		intArgDefaults.put(flag, Integer.valueOf(def));
+	}
+
+	/**
+	 * Adds new long argument to set of arguments
+	 * Client will crash if the same argument flag or description has already been added
+	 * @param flag the command line flag for the argument
+	 * @param description the description of the argument
+	 * @param required whether parameter is required
+	 */	
+	public void addLongArg(String flag, String description, boolean required) {
+		enforceUniqueFlag(flag);
+		enforceUniqueDescription(description);
+		longArgDescriptions.put(flag, description);
+		commandLineValues.put(flag, null);
+		if(required) requiredArgs.add(flag);
+	}
+
+	/**
+	 * Adds new long argument to set of arguments and stores default
+	 * Client will crash if the same argument flag or description has already been added
+	 * @param flag the command line flag for the argument
+	 * @param description the description of the argument
+	 * @param required whether parameter is required
+	 * @param def default value
+	 */	
+	public void addLongArg(String flag, String description, boolean required, long def) {
+		enforceUniqueFlag(flag);
+		enforceUniqueDescription(description);
+		longArgDescriptions.put(flag, description);
+		commandLineValues.put(flag, null);
+		if(required) requiredArgs.add(flag);
+		longArgDefaults.put(flag, Long.valueOf(def));
 	}
 
 	/**
@@ -470,6 +506,30 @@ public final class CommandLineParser {
 	}
 
 	/**
+	 * Get value of long parameter specified by flag
+	 * @param flag The command line flag for the argument
+	 * @return Long specified on command line or null if parameter was not specified
+	 */
+	public long getLongArg(String flag) {
+		
+		// Make sure command line has been parsed
+		if(!isParsed) {
+			throw new IllegalStateException("Cannot get parameter value without first calling method parse()"); 
+		}
+		
+		// Make sure parameter type is correct
+		if(!longArgDescriptions.containsKey(flag)) {
+			throw new IllegalArgumentException("Trying to get Long value for non-Long parameter " + flag); 
+		}
+		
+		if(commandLineValues.get(flag) == null) {
+			if(longArgDefaults.containsKey(flag)) return longArgDefaults.get(flag).longValue();
+		}
+		
+		return Long.valueOf(commandLineValues.get(flag),10).longValue();
+	}
+
+	/**
 	 * Get value of float parameter specified by flag
 	 * @param flag The command line flag for the argument
 	 * @return Float specified on command line or null if parameter was not specified
@@ -573,6 +633,12 @@ public final class CommandLineParser {
 			else msg += " (default=" + intArgDefaults.get(key) + ")\n";
 			args.add(msg); 
 		}
+		for(String key : longArgDescriptions.keySet()) {
+			String msg = key + " <long int>\t" + longArgDescriptions.get(key);
+			if(requiredArgs.contains(key)) msg += " (required)\n";
+			else msg += " (default=" + longArgDefaults.get(key) + ")\n";
+			args.add(msg); 
+		}
 		for(String key : floatArgDescriptions.keySet()) {
 			String msg = key + " <float>\t" + floatArgDescriptions.get(key);
 			if(requiredArgs.contains(key)) msg += " (required)\n";
@@ -605,7 +671,7 @@ public final class CommandLineParser {
 	 * @return true if and only if flag has already been used
 	 */
 	private boolean hasFlag(String flag) {
-		return (stringListArgDescriptions.containsKey(flag) || stringArgDescriptions.containsKey(flag) || intArgDescriptions.containsKey(flag) || floatArgDescriptions.containsKey(flag) || doubleArgDescriptions.containsKey(flag) || boolArgDescriptions.containsKey(flag));
+		return (stringListArgDescriptions.containsKey(flag) || stringArgDescriptions.containsKey(flag) || intArgDescriptions.containsKey(flag) || longArgDescriptions.containsKey(flag) || floatArgDescriptions.containsKey(flag) || doubleArgDescriptions.containsKey(flag) || boolArgDescriptions.containsKey(flag));
 	}
 	
 	/**
@@ -615,6 +681,15 @@ public final class CommandLineParser {
 	 */
 	public boolean hasIntFlag(String flag) {
 		return intArgDescriptions.containsKey(flag) && commandLineValues.containsKey(flag);
+	}
+	
+	/**
+	 * Whether the flag is associated with a long argument and was specified on the command line
+	 * @param flag The flag
+	 * @return Whether the flag is present
+	 */
+	public boolean hasLongFlag(String flag) {
+		return longArgDescriptions.containsKey(flag) && commandLineValues.containsKey(flag);
 	}
 	
 	/**
@@ -659,7 +734,7 @@ public final class CommandLineParser {
 	 * @return true if and only if description has already been used
 	 */
 	private boolean hasDescription(String description) {
-		return (stringArgDescriptions.containsValue(description) || intArgDescriptions.containsValue(description) || floatArgDescriptions.containsValue(description) || doubleArgDescriptions.containsValue(description) || boolArgDescriptions.containsValue(description));
+		return (stringArgDescriptions.containsValue(description) || intArgDescriptions.containsValue(description) || longArgDescriptions.containsValue(description) || floatArgDescriptions.containsValue(description) || doubleArgDescriptions.containsValue(description) || boolArgDescriptions.containsValue(description));
 	}
 	
 	/**

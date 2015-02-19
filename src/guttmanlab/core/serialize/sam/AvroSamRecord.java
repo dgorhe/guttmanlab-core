@@ -13,6 +13,8 @@ import guttmanlab.core.util.SAMFlagDecoder;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.sf.samtools.SAMRecord;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 
@@ -21,6 +23,8 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 	private GenericRecord record;
 	private Annotation annotation;
 	private boolean firstReadTranscriptionStrand;
+	public static int MIN_MAPPING_QUALITY = 0;
+	public static int MAX_MAPPING_QUALITY = Integer.MAX_VALUE; // mapq=255 means mapping quality not available
 	
 	public AvroSamRecord(GenericRecord genericRecord) {
 		this(genericRecord, true);
@@ -31,6 +35,9 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 		// Get basic attributes
 		firstReadTranscriptionStrand = firstReadIsTranscriptionStrand;
 		record = genericRecord;
+		if(!mappingQualityIsOk()) {
+			throw new IllegalStateException("Mapping quality not valid: " + getMappingQuality());
+		}
 		String cigar = getStringAttribute("cigar");
 		String chr = getReferenceName();
 		int start = getReferenceStartPosition();
@@ -61,6 +68,29 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 		
 		// Construct annotation
 		annotation = SAMFragment.parseCigar(cigar, chr, start, strand, name);
+	}
+	
+	/**
+	 * @param mapq Mapping quality
+	 * @return True iff the mapping quality is at least the minimum and less than 255 (unknown mapq)
+	 */
+	private static boolean mappingQualityIsOk(int mapq) {
+		return mapq >= MIN_MAPPING_QUALITY && mapq <= MAX_MAPPING_QUALITY;
+	}
+	
+	/**
+	 * @return True iff the mapping quality is at least the minimum and less than 255 (unknown mapq)
+	 */
+	public boolean mappingQualityIsOk() {
+		return mappingQualityIsOk(getMappingQuality());
+	}
+	
+	/**
+	 * @param record Sam record
+	 * @return True iff the mapping quality is at least the minimum and less than 255 (unknown mapq)
+	 */
+	public static boolean mappingQualityIsOk(SAMRecord record) {
+		return mappingQualityIsOk(record.getMappingQuality());
 	}
 	
 	public Object getAttribute(String attributeName) {
@@ -163,6 +193,11 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 	@Override
 	public int getNumHits() {
 		return getIntAttribute("tagNH");
+	}
+
+	@Override
+	public int getMappingQuality() {
+		return getIntAttribute("mapq");
 	}
 	
 }

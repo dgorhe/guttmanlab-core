@@ -1,7 +1,6 @@
 package guttmanlab.core.serialize.sam;
 
 import guttmanlab.core.annotation.Gene;
-import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
 import guttmanlab.core.serialize.AvroIndex;
@@ -49,8 +48,9 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public AvroSamRecord seek(String key) throws IOException {
-		GenericRecord genericRecord = stringIndex.seek(key);
-		return new AvroSamRecord(genericRecord);
+		//GenericRecord genericRecord = stringIndex.seek(key);
+		//return new AvroSamRecord(genericRecord);
+		throw new UnsupportedOperationException();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -59,11 +59,17 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 		List<GenericRecord> genericRecords = stringIndex.get(key);
 		List<AvroSamRecord> rtrn = new ArrayList<AvroSamRecord>();
 		for(GenericRecord record : genericRecords) {
-			AvroSamRecord samRecord = new AvroSamRecord(record);
-			if(excludeRegions != null && excludeRegions.overlaps(samRecord)) {
+			try {
+				AvroSamRecord samRecord = new AvroSamRecord(record);
+				// Skip the record if it overlaps a region from the exclusion set
+				if(excludeRegions != null && excludeRegions.overlaps(samRecord)) {
+					continue;
+				}
+				rtrn.add(samRecord);
+			} catch(IllegalStateException e) {
+				// Invalid mapping quality
 				continue;
 			}
-			rtrn.add(samRecord);
 		}
 		return rtrn;
 	}
@@ -86,11 +92,17 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 		List<GenericRecord> genericRecords = stringIndex.get(key, nameOfAttributeForExclusionSet, attributeValuesToExclude);
 		List<AvroSamRecord> rtrn = new ArrayList<AvroSamRecord>();
 		for(GenericRecord record : genericRecords) {
-			AvroSamRecord samRecord = new AvroSamRecord(record);
-			if(excludeRegions != null && excludeRegions.overlaps(samRecord)) {
+			try {
+				AvroSamRecord samRecord = new AvroSamRecord(record);
+				// Skip the record if it overlaps a region from the exclusion set
+				if(excludeRegions != null && excludeRegions.overlaps(samRecord)) {
+					continue;
+				}
+				rtrn.add(samRecord);
+			} catch(IllegalStateException e) {
+				// Invalid mapping quality
 				continue;
 			}
-			rtrn.add(samRecord);
 		}
 		return rtrn;
 	}
@@ -121,6 +133,10 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 	private static FeatureCollection<AvroSamRecord> fromList(List<AvroSamRecord> list) {
 		FeatureCollection<AvroSamRecord> rtrn = new FeatureCollection<AvroSamRecord>(null);
 		for(AvroSamRecord record : list) {
+			// Skip the record if its mapping quality is too low or not available
+			if(!record.mappingQualityIsOk()) {
+				continue;
+			}
 			rtrn.add(record);
 		}
 		return rtrn;

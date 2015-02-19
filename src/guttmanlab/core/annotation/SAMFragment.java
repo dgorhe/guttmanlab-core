@@ -234,6 +234,11 @@ public class SAMFragment extends AbstractAnnotation implements MappedFragment{
 	public int getNumHits() {
 		return getIntTag(SAM_NUM_HITS_TAG);
 	}
+
+	@Override
+	public int getMappingQuality() {
+		return record.getMappingQuality();
+	}
 	
 	//TODO For intersect, merge, and convert --> override and add all ReadFlags to the new object
 

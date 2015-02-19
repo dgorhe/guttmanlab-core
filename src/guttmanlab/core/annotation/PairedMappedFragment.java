@@ -141,5 +141,10 @@ public class PairedMappedFragment<T extends Annotation> extends AbstractAnnotati
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public int getMappingQuality() {
+		throw new UnsupportedOperationException();
+	}
+
 	
 }

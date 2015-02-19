@@ -15,4 +15,6 @@ public interface MappedFragment extends Annotation{
 	
 	public int getNumHits();
 	
+	public int getMappingQuality();
+	
 }
