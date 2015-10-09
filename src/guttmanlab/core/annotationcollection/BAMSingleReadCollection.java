@@ -108,20 +108,19 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 			if(next==null && currentIterator.hasNext())
 			{
 				SAMFragment n = currentIterator.next();
-				//TODO find out what this was for, maybe add back
-//				if(n.getNumberOfBlocks()>1)
-//				{
-//					boolean firstOfPair = n.getSamRecord().getReadPairedFlag() ? n.getSamRecord().getFirstOfPairFlag() : true;
-//					String id = ""+n.getName()+firstOfPair;
-//					if(!splicedReadNames.contains(id))
-//					{
-//						this.next = n;
-//						splicedReadNames.add(id);
-//					}
-//					else
-//						findNext();
-//				}
-//				else
+				if(n.getNumberOfBlocks()>1)
+				{
+					boolean firstOfPair = n.getSamRecord().getReadPairedFlag() ? n.getSamRecord().getFirstOfPairFlag() : true;
+					String id = ""+n.getName()+firstOfPair;
+					if(!splicedReadNames.contains(id))
+					{
+						this.next = n;
+						splicedReadNames.add(id);
+					}
+					else
+						findNext();
+				}
+				else
 					this.next = n;
 			}
 		}
