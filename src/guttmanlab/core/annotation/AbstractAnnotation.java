@@ -63,21 +63,22 @@ public abstract class AbstractAnnotation implements Annotation {
 
 	@Override
 	public Annotation merge(Annotation other) {
-		BlockedAnnotation rtrn=new BlockedAnnotation();
-		Iterator<SingleInterval> blocks1=getBlocks();
-		while(blocks1.hasNext()){
-			SingleInterval block1=blocks1.next();
-			Iterator<SingleInterval> blocks2=other.getBlocks();
-			while(blocks2.hasNext()){
-				SingleInterval block2=blocks2.next();
-				if(block1.overlaps(block2)){
-					SingleInterval merge=merge(block1, block2);
-					if(merge!=null){rtrn.addBlocks(merge);}
-				}
-			}
-			
-		}
-		return rtrn;
+		throw new UnsupportedOperationException("Method broken");
+//		BlockedAnnotation rtrn=new BlockedAnnotation();
+//		Iterator<SingleInterval> blocks1=getBlocks();
+//		while(blocks1.hasNext()){
+//			SingleInterval block1=blocks1.next();
+//			Iterator<SingleInterval> blocks2=other.getBlocks();
+//			while(blocks2.hasNext()){
+//				SingleInterval block2=blocks2.next();
+//				if(block1.overlaps(block2)){
+//					SingleInterval merge=merge(block1, block2);
+//					if(merge!=null){rtrn.addBlocks(merge);}
+//				}
+//			}
+//			
+//		}
+//		return rtrn;
 	}
 
 	protected SingleInterval merge(SingleInterval block1, SingleInterval block2) {
