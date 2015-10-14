@@ -54,6 +54,11 @@ public class BlockedAnnotation extends AbstractAnnotation {
 		addBlocks(annot);
 	}
 	
+	public BlockedAnnotation(Annotation annot, String newName){
+		this(annot);
+		this.name = newName;
+	}
+	
 	/**
 	 * Add block to current blocks
 	 * If overlaps existing block, merge
@@ -205,7 +210,8 @@ public class BlockedAnnotation extends AbstractAnnotation {
 		while(featureEnd <= size && featureStart >= 0) {
 			Annotation windowFeatureSpace = new SingleInterval(getName(), featureStart, featureEnd);
 			Annotation windowReferenceSpace = convertToReferenceSpace(windowFeatureSpace);
-			DerivedAnnotation<BlockedAnnotation> windowDerived = new DerivedAnnotation<BlockedAnnotation>(windowReferenceSpace, this);
+			DerivedAnnotation<BlockedAnnotation> windowDerived = new DerivedAnnotation<BlockedAnnotation>(windowReferenceSpace, 
+					windowReferenceSpace.toUCSC(), this);
 			rtrn.add(windowDerived);
 			if(plusStrand) {
 				featureStart += stepSize;

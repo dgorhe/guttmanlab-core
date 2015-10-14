@@ -15,13 +15,18 @@ public class DerivedAnnotation<T extends Annotation> extends BlockedAnnotation{
 		this.parentDerivedFrom=parent;
 	}
 	
+	public DerivedAnnotation(Annotation annotation, String newName, T parent){
+		super(annotation, newName);
+		this.parentDerivedFrom=parent;
+	}
+	
 	/**
 	 * The parent annotation this was derived from
 	 * @return A pointer to the parent this was derived from
 	 */
 	public T getParentAnnotation(){return parentDerivedFrom;}
 	
-	public String getName()
+	public String getParentName()
 	{
 		return parentDerivedFrom.getName();
 	}
