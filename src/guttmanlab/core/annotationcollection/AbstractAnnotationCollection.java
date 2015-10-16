@@ -1,13 +1,14 @@
 package guttmanlab.core.annotationcollection;
 
 import guttmanlab.core.annotation.Annotation;
+import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BlockedAnnotation;
 import guttmanlab.core.annotation.ContiguousWindow;
 import guttmanlab.core.annotation.DerivedAnnotation;
 import guttmanlab.core.annotation.PairedMappedFragment;
 import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.SAMFragment;
 import guttmanlab.core.annotation.SingleInterval;
-import guttmanlab.core.annotation.Annotation.Strand;
 import guttmanlab.core.coordinatespace.CoordinateSpace;
 import guttmanlab.core.datastructures.IntervalTree;
 
@@ -17,15 +18,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.apache.commons.collections15.Predicate;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.util.CloseableIterator;
+
+import org.apache.commons.collections15.Predicate;
 
 public abstract class AbstractAnnotationCollection<T extends Annotation> implements AnnotationCollection<T>{
 
