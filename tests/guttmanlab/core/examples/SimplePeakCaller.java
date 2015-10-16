@@ -1,4 +1,4 @@
-package guttmanlab.core.test;
+package guttmanlab.core.examples;
 
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.PairedMappedFragment;
@@ -20,14 +20,14 @@ import net.sf.samtools.util.CloseableIterator;
 import guttmanlab.core.math.ScanStat;
 
 public class SimplePeakCaller {
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws Exception
 	{
 		CommandLineParser p = new CommandLineParser();
 		p.addStringArg("-b", "Bam sample file", true);
 		p.addStringArg("-i", "Bam input file", true);
 		p.addStringArg("-o", "Output prefix",true);
-		p.addStringArg("-g", "Bed gene file", false, "/storage/Annotations/RefSeq/mm9/RefSeq.bed");
-		p.addStringArg("-s", "Chromsome size file", false, "/storage/Users/cburghard/Projects/RAP_Pipeline/mm9chrm.bed");
+		p.addStringArg("-g", "Bed gene file", false, "/Volumes/storage/Annotations/RefSeq/mm9/RefSeq.bed");
+		p.addStringArg("-s", "Chromsome size file", false, "/Volumes/storage/Users/cburghard/Projects/RAP_Pipeline/mm9chrm.bed");
 		p.addIntArg("-ws", "Window size", false, 5000);
 		p.addIntArg("-step", "Window step size", false, 500);
 		p.addDoubleArg("-p", "P value cutoff", false, .005);
@@ -74,8 +74,8 @@ public class SimplePeakCaller {
 				double pValue = ScanStat.getPValue(controlCount,sampleCount,controlTotal,sampleTotal,winSize,region.size());
 				if(pValue <= maxP)
 					{
-						//writer.println(region.getName()+"\t"+start+"\t"+(start+winSize)+"\t"+pValue);
-						System.out.println(region.getName()+"\t"+start+"\t"+(start+winSize)+"\t"+pValue);
+						writer.println(region.getName()+"\t"+start+"\t"+(start+winSize)+"\t"+pValue);
+						//System.out.println(region.getName()+"\t"+start+"\t"+(start+winSize)+"\t"+pValue);
 					}
 			}
 		}	

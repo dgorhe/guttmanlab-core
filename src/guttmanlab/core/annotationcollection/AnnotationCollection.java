@@ -24,7 +24,7 @@ public interface AnnotationCollection<T extends Annotation> {
 	 * Merge the annotations in this collection
 	 * @return A new annotation collection consisting of the merged annotations
 	 */
-	public AnnotationCollection<T> merge();
+	public FeatureCollection<BlockedAnnotation> merge();
 	
 	/**
 	 * @param other An annotation
@@ -37,8 +37,9 @@ public interface AnnotationCollection<T extends Annotation> {
 	 * @param region Region to check for overlappers
 	 * @param fullyContained Whether the overlappers must be fully contained in the region in order to count
 	 * @return The number of overlappers
+	 * @throws Exception 
 	 */
-	public int numOverlappers(Annotation region, boolean fullyContained);
+	public int numOverlappers(Annotation region, boolean fullyContained) throws Exception;
 	
 	/**
 	 * @return A sorted iterator over all the annotations in this collection

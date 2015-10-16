@@ -131,7 +131,8 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 		record.setAttribute(MATE_CIGAR, mate.getCigarString());
 		record.setAttribute(MATE_MAPPING_QUALITY, mate.getMappingQuality());
 		
-		int fragmentLength=Math.max(pair.getRead1().getReferenceEndPosition(), pair.getRead2().getReferenceEndPosition())- Math.min(pair.getRead1().getReferenceStartPosition(), pair.getRead2().getReferenceStartPosition());
+		int fragmentLength=Math.max(pair.getRead1().getReferenceEndPosition(), 
+				pair.getRead2().getReferenceEndPosition())- Math.min(pair.getRead1().getReferenceStartPosition(), pair.getRead2().getReferenceStartPosition());
 	    record.setCigarString(fragmentLength + "M");	
 		record.setInferredInsertSize(fragmentLength);
 		return record;
@@ -448,7 +449,7 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 			public void close() {iter.close();}
 		}
 	}	
-	
+		
 	/*public BAMPairedFragmentCollection convert(AnnotationCollection<? extends Annotation> features, boolean fullyContained){
 		//TODO This needs to be rewritten directly use the paired end iterator to write to disk
 		return new BAMPairedFragmentCollection(this.reads.convert(features, fullyContained));

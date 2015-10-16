@@ -10,8 +10,8 @@ import org.junit.Test;
 
 public class BamCollectionFactoryTest {
 
-	private static String singleBam = "/storage/Projects/RibosomeProfiling/Ribosome.bam";
-	private static String pairedBam = "/storage/Users/prussell/Testing/new_core_code_base/port_peak_caller/input.bam";
+	private static String singleBam = "/Users/cburghard/Downloads/Ribosome.bam";
+	private static String pairedBam = "/Users/cburghard/Downloads/input.bam";
 	
 	@Test
 	public void testSingleDetection() {

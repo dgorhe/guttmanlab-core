@@ -39,15 +39,15 @@ public class ConvertCoordinatesTest {
 	@Before
 	public void setUp() throws IOException
 	{
-		this.bam = new BAMSingleReadCollection(new File("/storage/shared/CoreTestData/chr19.clean.sorted.bam"));
-		this.fhead = bam.getFileHeader(); 
+		this.bam = new BAMSingleReadCollection(new File("/Users/cburghard/Downloads/chr19.clean.sorted.bam"));
+		this.fhead = bam.getFileHeader(); 	
 		this.refSpace = new CoordinateSpace(fhead);  
-		this.fname = "/storage/shared/CoreTestData/RefSeqStrandTest.bed";
-		this.io =  new BEDFileIO("/storage/shared/CoreTestData/refspace.txt"); 
+		this.fname = "/Users/cburghard/Downloads/RefSeqStrandTest.bed";
+		this.io =  new BEDFileIO("/Users/cburghard/Downloads/refspace.txt"); 
 		this.features = io.loadFromFile(fname);
 	}
 	
-	//@Test //Pass 
+	@Test //Pass 
 	//Verifies that the correct number of reads are returned for Ccdc87, a single exon gene on the positive strand.
 	public void Ccdc87OverlapReadCount() throws IOException{
 		System.out.println("\n\nCcdc87 Mapped Reads:");
@@ -78,7 +78,7 @@ public class ConvertCoordinatesTest {
 	}
 	
 	
-	//@Test //Pass
+	@Test //Pass
 	//Verifies the correct number of overlapping reads are returned after conversion to feature space for Cd248.
 	public void Cd248ConvertCoordinates() throws IOException{
 		System.out.println("\n\nCd248 Converted Reads:");
@@ -110,7 +110,7 @@ public class ConvertCoordinatesTest {
 	}
 	
 	
-	//@Test //Pass
+	@Test //Pass
 	//Should fail; region is treated as start and end, should not include intron overlaps
 	public void Kcnk4Overlaps() throws IOException{
 		System.out.println("\n\nKcnk4 Mapped Reads:");
@@ -140,7 +140,7 @@ public class ConvertCoordinatesTest {
 	}
 	
 	
-	//@Test //Pass
+	@Test //Pass
 	//Verifies the correct reads are returned for CCdc87, a multi exon negative strand gene.
 	public void Kcnk4ConvertCoordinates() throws IOException{
 		System.out.println("\n\nKcnk4 Converted Reads:");
@@ -173,7 +173,7 @@ public class ConvertCoordinatesTest {
 	}
 	
 	
-	//@Test 
+	@Test 
 	//Test a multi-exon negative gene for correct number of unconverted overlaps
 	public void Dkk1OverlapReadCount()
 	{
@@ -206,7 +206,7 @@ public class ConvertCoordinatesTest {
 	}
 	
 	
-	//@Test //Fail no reads
+	@Test //Fail no reads
 	//Test a multi-exon negative gene for correct number of converted, fully contained overlaps
 	public void Dkk1ConvertCoordinatesFullyContained() throws IOException{
 		System.out.println("\n\nDkk1 Converted Reads (Fully Contained):");
@@ -238,7 +238,7 @@ public class ConvertCoordinatesTest {
 		assertEquals("72 converted annotations should overlap Dkk1",72,count);
 	}
 	
-	//@Test //Pass
+	@Test //Pass
 	//Test a multi-exon negative gene for correct number of converted overlaps
 	public void Dkk1ConvertCoordinates() throws IOException{
 		System.out.println("\n\nDkk1 Converted Reads:");

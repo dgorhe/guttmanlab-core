@@ -18,8 +18,8 @@ import org.junit.Test;
 
 public class AnnotationGetWindowsTest {
 	
-	private static String bedFile = "/storage/Annotations/RefSeq/mm9/RefSeq.bed";
-	private static String referenceSizes = "/storage/Genomes/mm9/sizes";
+	private static String bedFile = "/Users/cburghard/Downloads/RefSeq.bed";
+	private static String referenceSizes = "/Users/cburghard/Downloads/sizes";
 	
 	private Map<String, FeatureCollection<Gene>> genesByReference;
 	private FeatureCollection<Gene> genesChr1;

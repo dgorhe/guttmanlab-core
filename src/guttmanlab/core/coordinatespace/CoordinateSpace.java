@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMSequenceRecord;
 
@@ -51,16 +54,31 @@ public class CoordinateSpace {
 		//Is contained if annotation.getReferenceName() is in references and positions are within size
 		if(this.refSizes.containsKey(annotation.getReferenceName())){
 			int size=refSizes.get(annotation.getReferenceName());
-			if(annotation.getReferenceEndPosition()<size){return true;}
+			if(annotation.getReferenceEndPosition()<=size){return true;}
 		}
 		return false;
 	}
 
 	@Override
-	public boolean equals(Object o){
-		// FIXME Auto-generated method stub
-		throw new UnsupportedOperationException("TODO");
-	}
+    public int hashCode() {
+        return new HashCodeBuilder(17, 31). // two randomly chosen prime numbers
+            // if deriving: appendSuper(super.hashCode()).
+            append(refSizes).
+            toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+       if (!(obj instanceof CoordinateSpace))
+            return false;
+        if (obj == this)
+            return true;
+
+        CoordinateSpace rhs = (CoordinateSpace) obj;
+        return new EqualsBuilder().
+            append(refSizes, rhs.refSizes).
+            isEquals();
+    }
 	
 	/**
 	 * @return Map associating each reference name with sequence length

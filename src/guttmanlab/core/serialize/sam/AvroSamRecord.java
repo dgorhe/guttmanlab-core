@@ -102,7 +102,7 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 	}
 	
 	public int getIntAttribute(String attributeName) {
-		return (int) record.get(attributeName);
+		return record.get(attributeName).hashCode();  //original: return (int) record.get(attributeName) cannot cast Object to int
 	}
 
 	@Override

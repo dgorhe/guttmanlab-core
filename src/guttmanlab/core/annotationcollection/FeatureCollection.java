@@ -80,11 +80,13 @@ public class FeatureCollection<T extends BlockedAnnotation> extends AbstractAnno
 	@Override
 	public CloseableIterator<T> sortedIterator(Annotation region, boolean fullyContained) {
 		IntervalTree<T> tree=this.annotationTree.get(region.getReferenceName());
+		if(tree==null)  //tree may be null if region's reference was not found in annotations CB
+			return null;
 		Iterator<T> iter=tree.overlappingValueIterator(region.getReferenceStartPosition(), region.getReferenceEndPosition());
 		return new FilteredIterator<T>(iter, getFilters());
 	}
 	
-	@Override
+	/*@Override
 	public FeatureCollection<T> merge() {
 		CloseableIterator<T> old = sortedIterator();
 		FeatureCollection<T> merged = new FeatureCollection<T>(referenceCoordinateSpace);
@@ -108,7 +110,7 @@ public class FeatureCollection<T extends BlockedAnnotation> extends AbstractAnno
 		if(current != null)
 			merged.add(current);
 		return merged;
-	}
+	}*/
 	/**
 	 * @return The coordinateSpace of the reference for this annotation collection
 	 */
@@ -175,6 +177,7 @@ public class FeatureCollection<T extends BlockedAnnotation> extends AbstractAnno
 
 	@Override
 	public boolean contains(Object o) {
+		//TODO: This cast causes exceptions; consider checking type first or changing signature.
 		T annot = (T)o;
 		String chr = annot.getReferenceName();
 		if(!annotationTree.containsKey(chr)) {

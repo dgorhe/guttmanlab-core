@@ -30,18 +30,18 @@ public class BAMWriteTest {
 	@Before
 	public void setUp() throws IOException
 	{
-		this.bam = new BAMSingleReadCollection(new File("/storage/shared/CoreTestData/chr19.clean.sorted.bam"));
+		this.bam = new BAMSingleReadCollection(new File("/Users/cburghard/Downloads/chr19.clean.sorted.bam"));
 		this.fhead = bam.getFileHeader(); 
 		this.refSpace = new CoordinateSpace(fhead);  
-		this.fname = "/storage/shared/CoreTestData/RefSeqStrandTest.bed";
-		this.io =  new BEDFileIO("/storage/shared/CoreTestData/refspace.txt"); 
+		this.fname = "/Users/cburghard/Downloads/RefSeqStrandTest.bed";
+		this.io =  new BEDFileIO("/Users/cburghard/Downloads/refspace.txt"); 
 		this.features = io.loadFromFile(fname);
 	}
 	
 
 	@Test
 	public void BAMReadWritetest() {
-		String fname = "/storage/shared/CoreTestData/newGeneTest.bam";
+		String fname = "/Users/cburghard/Downloads/newGeneTest.bam";
 		File f = new File(fname);
 		CloseableIterator<Gene> iter = features.sortedIterator();
 		Annotation a = null;

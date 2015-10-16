@@ -1,13 +1,23 @@
 package guttmanlab.core.test;
 
 import static org.junit.Assert.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.BlockedAnnotation;
 import guttmanlab.core.annotation.DerivedAnnotation;
 import guttmanlab.core.annotation.PairedMappedFragment;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotation.predicate.PairedFilterWrapper;
+import net.sf.samtools.util.CloseableIterator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -124,5 +134,78 @@ public class AnnotationTest {
 		assertEquals("blocked3 and single interval 3 have same hash code.",true,blocked3.hashCode()==block3.hashCode());
 		assertEquals("blocked2 and 3 have different hash codes.",false,blocked3.hashCode()==blocked2.hashCode());
 	}
+	
+	@Test 
+	public void testAnnotationSize()
+	{
+		//single exon positive strand
+		BlockedAnnotation a1 = new BlockedAnnotation();
+		SingleInterval b1 = new SingleInterval("chr1",100,500,Strand.POSITIVE);
+		a1.addBlocks(b1);
+		assertEquals("single exon + strand size is 400bp",400,a1.size());
+		
+		//single exon negative strand
+		BlockedAnnotation a2 = new BlockedAnnotation();
+		SingleInterval b2 = new SingleInterval("chr1",100,500,Strand.NEGATIVE);
+		a2.addBlocks(b2);
+		assertEquals("single exon + strand size is 400bp",400,a2.size());
+		
+		//multi exon positive strand
+		BlockedAnnotation a3 = new BlockedAnnotation();
+		SingleInterval b3_1 = new SingleInterval("chr1",100,500,Strand.POSITIVE);
+		SingleInterval b3_2 = new SingleInterval("chr1",900,1500,Strand.POSITIVE);
+		SingleInterval b3_3 = new SingleInterval("chr1",2000,2500,Strand.POSITIVE);
+		a3.addBlocks(b3_1);
+		a3.addBlocks(b3_2);
+		a3.addBlocks(b3_3);
+		assertEquals("multi exon + strand size is 1500bp",1500,a3.size());
+		//multi-exon negative strand
+	}
+	@Test
+	public void testOverlapsOnUnknownStrand(){
+		//get an interval with unknown strand
+		//get reads that should overlap
+		
+	}
+	
+	@Test
+	public void testRefSeq() throws NumberFormatException, IOException{
+			
+		
+		//sample refseq genes
+		BEDFileIO io =  new BEDFileIO("/Users/cburghard/Downloads/sizes");
+		String FeatureFile = "/Users/cburghard/Downloads/RefSeq.bed";
+		CloseableIterator<? extends Annotation> features = io.loadFromFile(FeatureFile).sortedIterator();
+		PrintWriter writer = new PrintWriter("/Users/cburghard/Downloads/geneLengthsNew.txt");
+		
+		while(features.hasNext())
+		{
+			Annotation feature = features.next();
+			writer.println(feature.getName()+"\t"+feature.size());
+		}
+		
+		features.close();
+		writer.close();
+		
+		
+		//read in bed file as normal IO
+		PrintWriter writer2 = new PrintWriter("/Users/cburghard/Downloads/geneLengthsBed.txt");
+		File refseq = new File("/Users/cburghard/Downloads/RefSeq.bed");
+		BufferedReader br = new BufferedReader(new FileReader(refseq));
+	    String line;
+	    while ((line = br.readLine()) != null) {
+		    int length = 0;
+	    	String name = line.split("\t")[3];
+	    	String[] exons = line.split("\t")[10].split(",");
+	    	for(String num : exons)
+	    	{
+	    		length+=Integer.valueOf(num);
+	    	}
+	    	writer2.println(name+"\t"+length);
+	    }
+	    br.close();
+		writer2.close();
+	}
+	
 
 }

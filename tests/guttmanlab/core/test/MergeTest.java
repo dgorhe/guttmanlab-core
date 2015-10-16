@@ -180,5 +180,58 @@ public class MergeTest {
 		FeatureCollection<BlockedAnnotation> fc_merged = fc.merge();
 		assertEquals("merged fc contains two annotations",2,fc_merged.getNumAnnotations());
 	}
+	/*
+	public void sampleIntegrationTest() {
+		//detect windows with coverage > a cutoff
+		PairedFragmentCollection fragments = new PairedFragmentCollection(bamfile);
+		FeatureCollection features = new FeatureCollection(bedfile);
+		
+		for(Feature f : features)
+		{
+			WindowCollection windows = fragments.getWindows(f,10);
+			int cutoff = fragments.numOverlappers(f) / f.size();
+			
+			for(Window win : windows)
+			{
+				int numReads = win.numReads();
+				if(win.numReads() > cutoff)
+					System.out.println(win.toBED() + numReads);
+			}
+		}
+	}
 	
+	public void sampleIntegrationTest2() {
+		//windows over entire feature space
+		PairedFragmentCollection fragments = new PairedFragmentCollection(bamfile);
+		FeatureCollection features = new FeatureCollection(bedfile);
+		WindowCollection windows = fragments.getWindows(features.getFeatureCoordinateSpace());
+		int average = fragments.numReads() / features.getFeatureCoordinateSpace().size();
+		
+		for(Window win : windows)
+		{
+			int numReads = win.numReads();
+			if(win.numReads() > average)
+				System.out.println(win.toBED() + numReads);
+		}
+	}
+	
+	public void sampleIntegrationTest3() {
+		//
+		PairedFragmentCollection fragments = new PairedFragmentCollection(bamfile);
+		FeatureCollection features = new FeatureCollection(bedfile);
+		
+		for(Feature f : features)
+		{
+			WindowCollection windows = fragments.getWindows(f);
+			int average = fragments.numOverlappers(f) / f.size();
+			
+			for(Window win : windows)
+			{
+				int numReads = win.numReads();
+				if(win.numReads() > average)
+					System.out.println(win.toBED() + numReads);
+			}
+		}
+	}
+	*/
 }

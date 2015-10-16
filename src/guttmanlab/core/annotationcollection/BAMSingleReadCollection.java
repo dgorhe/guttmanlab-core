@@ -55,7 +55,7 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 
 	@Override
 	public CloseableIterator<SAMFragment> sortedIterator(Annotation region, boolean fullyContained) {
-		CloseableIteratorChain iter_chain = new CloseableIteratorChain(region);
+		CloseableIteratorChain iter_chain = new CloseableIteratorChain(region,fullyContained);
 		return new FilteredIterator<SAMFragment>(iter_chain, getFilters(),region.getOrientation());
 	}
 	
@@ -66,6 +66,7 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		private Annotation region;
 		private SAMFragment next;
 		private ArrayList<String> splicedReadNames;
+		private boolean fullyContained;
 		
 		public CloseableIteratorChain(Annotation region)
 		{
@@ -75,13 +76,25 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 			this.splicedReadNames = new ArrayList<String>();
 		}
 		
+		public CloseableIteratorChain(Annotation region, boolean fullyContained)
+		{
+			this.region = region;
+			this.blocks = region.getBlocks();
+			this.currentIterator = null;
+			this.splicedReadNames = new ArrayList<String>();
+			this.fullyContained = fullyContained;
+		}
+		
 		public boolean hasNext(){
 			if(currentIterator == null)
 			{
 				if(blocks.hasNext())
 				{
 					Annotation block = blocks.next();
-					currentIterator = new WrappedIterator(reader.queryOverlapping(region.getReferenceName(), block.getReferenceStartPosition()+1,block.getReferenceEndPosition()));
+					if(this.fullyContained)
+						currentIterator = new WrappedIterator(reader.queryContained(region.getReferenceName(), block.getReferenceStartPosition()+1,block.getReferenceEndPosition()));
+					else
+						currentIterator = new WrappedIterator(reader.queryOverlapping(region.getReferenceName(), block.getReferenceStartPosition()+1,block.getReferenceEndPosition()));
 					return hasNext();
 				}
 				else //there were no more blocks

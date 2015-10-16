@@ -57,7 +57,8 @@ public class ConvertedSpace<T extends Annotation> extends AbstractAnnotationColl
 		}
 		
 		else{
-			throw new IllegalArgumentException(annotation.getReferenceName()+":"+annotation.getReferenceStartPosition()+"-"+annotation.getReferenceEndPosition()+" annotation is not mapped to either Reference or Feature space");
+			return convertFromReference(annotation, fullyContained);
+			//throw new IllegalArgumentException(annotation.getName()+" "+annotation.getReferenceName()+":"+annotation.getReferenceStartPosition()+"-"+annotation.getReferenceEndPosition()+" annotation is not mapped to either Reference or Feature space");
 		}
 		
 	}
@@ -86,6 +87,8 @@ public class ConvertedSpace<T extends Annotation> extends AbstractAnnotationColl
 		CloseableIterator<? extends Annotation> iter=featureMapping.sortedIterator(annotation, fullyContained);
 	
 			//Adjust the coordinates of the feature as needed in featureSpace (ie as distance from start and end)
+		if(iter==null) //reference was not found, iterator is empty. CB
+			return rtrn;
 		while(iter.hasNext()){
 			Annotation feature=iter.next();
 			Annotation intersect=feature.intersect(annotation); //TODO Consider whether to remove this, it may not be needed and is expensive per read

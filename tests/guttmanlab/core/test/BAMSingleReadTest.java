@@ -36,15 +36,15 @@ public class BAMSingleReadTest {
 	@Before
 	public void setUp() throws IOException
 	{
-		this.bam = new BAMSingleReadCollection(new File("/storage/shared/CoreTestData/chr19.clean.sorted.bam"));
+		this.bam = new BAMSingleReadCollection(new File("/Users/cburghard/Downloads/chr19.clean.sorted.bam"));
 		this.fhead = bam.getFileHeader(); 
 		this.refSpace = new CoordinateSpace(fhead);  
-		this.fname = "/storage/shared/CoreTestData/RefSeqStrandTest.bed";
-		this.io =  new BEDFileIO("/storage/shared/CoreTestData/refspace.txt"); 
+		this.fname = "/Users/cburghard/Downloads/RefSeqStrandTest.bed";
+		this.io =  new BEDFileIO("/Users/cburghard/Downloads/refspace.txt"); 
 		this.features = io.loadFromFile(fname);
 	}
 
-	//@Test //Pass
+	@Test //Pass
 	//Tests that the sortedIterator returns reads that only overlap blocks, and not introns
 	public void SortedIteratorBlockTest() {
 		
@@ -87,7 +87,7 @@ public class BAMSingleReadTest {
 	}
 	
 
-	//@Test
+	@Test
 	public void IteratorStrandMatchingTest() throws IOException{
 		//System.out.println("\n\nCcdc87 Mapped Reads:");
 		CloseableIterator<Gene> iter = features.sortedIterator();
@@ -148,7 +148,7 @@ public class BAMSingleReadTest {
 	}
 	
 	
-	//@Test
+	@Test
 	public void AnnotationCollectionGetCount() {
 		int count = bam.getNumAnnotations();
 		System.out.println(count);
