@@ -17,6 +17,7 @@ import net.sf.samtools.SAMRecord;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, MappedFragment {
 	
@@ -199,5 +200,23 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 	public int getMappingQuality() {
 		return getIntAttribute("mapq");
 	}
+	
+	public boolean equals(Object o) {
+		if(o instanceof Annotation) {
+			String otherName = ((Annotation)o).getName();
+			if(!otherName.equals(getName())) {
+				return false;
+			}
+			return equals(o);
+		}
+		return false;
+	}
+	
+	public int hashCode() {
+		HashCodeBuilder h = hashCodeBuilder();
+		h.append(getName());
+		return h.toHashCode();
+	}
+
 	
 }

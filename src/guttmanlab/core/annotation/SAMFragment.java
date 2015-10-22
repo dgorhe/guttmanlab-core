@@ -14,7 +14,7 @@ import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.TextCigarCodec;
 
-public class SAMFragment extends AbstractAnnotation implements MappedFragment{
+public class SAMFragment extends AbstractNamedAnnotation implements MappedFragment{
 
 	private SAMRecord record;
 	private boolean strandIsFirstOfPair; 

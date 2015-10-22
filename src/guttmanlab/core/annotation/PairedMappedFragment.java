@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class PairedMappedFragment<T extends Annotation> extends AbstractAnnotation implements MappedFragment{
+public class PairedMappedFragment<T extends Annotation> extends AbstractNamedAnnotation implements MappedFragment{
 
 	private Pair<T> pair;
 	

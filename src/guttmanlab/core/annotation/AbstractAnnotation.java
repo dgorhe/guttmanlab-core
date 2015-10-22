@@ -375,9 +375,13 @@ public abstract class AbstractAnnotation implements Annotation {
 		return false;
 	}
 	
+	protected HashCodeBuilder hashCodeBuilder() {
+		return new HashCodeBuilder(31,37).append(getReferenceName()).append(getReferenceStartPosition()).append(getReferenceEndPosition()).append(getOrientation()).append(getNumberOfBlocks());
+	}
+	
 	@Override
 	public int hashCode()
 	{
-		return new HashCodeBuilder(31,37).append(getReferenceName()).append(getReferenceStartPosition()).append(getReferenceEndPosition()).append(getOrientation()).append(getNumberOfBlocks()).toHashCode();
+		return hashCodeBuilder().toHashCode();
 	}
 }
