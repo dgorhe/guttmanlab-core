@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.log4j.Logger;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
@@ -15,6 +16,8 @@ import net.sf.samtools.SAMRecord;
  *
  */
 public abstract class AbstractAnnotation implements Annotation {
+	
+	private static Logger logger = Logger.getLogger(AbstractAnnotation.class.getName());
 	
 	@Override
 	public Annotation intersect(Annotation other) {
@@ -63,22 +66,20 @@ public abstract class AbstractAnnotation implements Annotation {
 
 	@Override
 	public Annotation merge(Annotation other) {
-		throw new UnsupportedOperationException("Method broken");
-//		BlockedAnnotation rtrn=new BlockedAnnotation();
-//		Iterator<SingleInterval> blocks1=getBlocks();
-//		while(blocks1.hasNext()){
-//			SingleInterval block1=blocks1.next();
-//			Iterator<SingleInterval> blocks2=other.getBlocks();
-//			while(blocks2.hasNext()){
-//				SingleInterval block2=blocks2.next();
-//				if(block1.overlaps(block2)){
-//					SingleInterval merge=merge(block1, block2);
-//					if(merge!=null){rtrn.addBlocks(merge);}
-//				}
-//			}
-//			
-//		}
-//		return rtrn;
+		Strand consensusStrand = Annotation.Strand.consensusStrand(getOrientation(), other.getOrientation());
+		if(consensusStrand.equals(Strand.INVALID)) {
+			return null;
+		}
+		BlockedAnnotation rtrn=new BlockedAnnotation();
+		Iterator<SingleInterval> thisBlocks=getBlocks();
+		while(thisBlocks.hasNext()) {
+			rtrn.addBlocks(thisBlocks.next());
+		}
+		Iterator<SingleInterval> otherBlocks=other.getBlocks();
+		while(otherBlocks.hasNext()) {
+			rtrn.addBlocks(otherBlocks.next());
+		}
+		return rtrn;
 	}
 
 	protected SingleInterval merge(SingleInterval block1, SingleInterval block2) {

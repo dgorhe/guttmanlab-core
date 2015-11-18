@@ -13,7 +13,7 @@ import net.sf.samtools.SAMRecord;
  * @author prussell
  *
  */
-public interface Annotation {
+public interface Annotation extends Comparable<Annotation> {
 	
 	/**
 	 * An enumeration of strand possibilities
