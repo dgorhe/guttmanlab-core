@@ -70,7 +70,7 @@ public class BlockedAnnotation extends AbstractAnnotation {
 		boolean added=false;
 		Iterator<SingleInterval> exons=annot.getBlocks();
 		while(exons.hasNext()){
-			added=update(exons.next());
+			added &= update(exons.next());
 		}
 		return added;
 	}
