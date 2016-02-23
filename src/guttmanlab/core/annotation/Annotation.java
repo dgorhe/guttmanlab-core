@@ -4,6 +4,7 @@ import guttmanlab.core.annotationcollection.AnnotationCollection;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.BiFunction;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
@@ -13,7 +14,7 @@ import net.sf.samtools.SAMRecord;
  * @author prussell
  *
  */
-public interface Annotation {
+public interface Annotation extends Comparable<Annotation> {
 	
 	/**
 	 * An enumeration of strand possibilities
@@ -136,6 +137,20 @@ public interface Annotation {
 	public Annotation intersect(Annotation other);
 	
 	/**
+	 * Creates the union of this annotation with another.
+	 * @param other is the other annotation
+	 * @return a new annotation which consists of all regions contained by either of the two input annotations
+	 */
+	public Annotation union(Annotation other);
+	
+	/**
+	 * Creates the symmetric difference between this annotation and another.
+	 * @param other is the other annotation
+	 * @return a new annotation which consists of all regions contained by either of the two input annotations, but not both
+	 */
+	public Annotation xor(Annotation other);
+	
+	/**
 	 * Get blocks in the alignment
 	 * @return The blocks of the alignment
 	 */
@@ -241,8 +256,8 @@ public interface Annotation {
 	public AnnotationCollection<DerivedAnnotation<? extends Annotation>> getWindows(int windowSize, int stepSize);
 	
 	/**
-	 * Set the orientation of this feature
-	 * @param orientation
+	 * Sets the orientation of this feature and its constituent blocks.
+	 * @param orientation is the desired orientation
 	 */
 	public void setOrientation(Strand orientation);
 
@@ -274,4 +289,6 @@ public interface Annotation {
 	 */
 	int compareTo(Annotation other);
 	
+	int[] flatten();
+	Annotation merge(Annotation other, BiFunction<Boolean, Boolean, Boolean> op);
 }

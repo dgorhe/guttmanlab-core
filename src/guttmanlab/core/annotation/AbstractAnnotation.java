@@ -3,8 +3,11 @@ package guttmanlab.core.annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.function.BiFunction;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.log4j.Logger;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
@@ -16,25 +19,10 @@ import net.sf.samtools.SAMRecord;
  */
 public abstract class AbstractAnnotation implements Annotation {
 	
-	@Override
-	public Annotation intersect(Annotation other) {
-		BlockedAnnotation rtrn=new BlockedAnnotation();
-		Iterator<SingleInterval> blocks1=getBlocks();
-		while(blocks1.hasNext()){
-			SingleInterval block1=blocks1.next();
-			Iterator<SingleInterval> blocks2=other.getBlocks();
-			while(blocks2.hasNext()){
-				SingleInterval block2=blocks2.next();
-				SingleInterval inter=intersect(block1, block2);
-				if(inter!=null){rtrn.addBlocks(inter);}
-			}
-			
-		}
-		return rtrn;
-	}
+	private static Logger logger = Logger.getLogger(AbstractAnnotation.class.getName());
 	
 	/**
-	 * Get blocks as a collection
+	 * Gets the blocks of this annotation as a collection
 	 * @return The set of blocks
 	 */
 	public Collection<Annotation> getBlockSet() {
@@ -45,42 +33,173 @@ public abstract class AbstractAnnotation implements Annotation {
 		}
 		return rtrn;
 	}
-	
 
+	////////////////////
+	// Set operations //
+	////////////////////
+	
 	/**
-	 * Helper method to compute the overlap between single blocks
-	 * @param block1 Block1
-	 * @param block2 Block2
-	 * @return The intersection or null if no intersection exists
+	 * Converts this annotation into an array of integers corresponding to the
+	 * start and end coordinates of the blocks. For example, if the annotation
+	 * has two blocks, [3, 10) and [15, 20), the output would be the array
+	 * [3, 10, 15, 20]. Other information, such as reference name and orientation,
+	 * is lost.
+	 * @returns a flattened representation of this annotation
 	 */
-	private SingleInterval intersect(SingleInterval block1, SingleInterval block2) {
-		if(!overlaps(block1, block2)){return null;}
-		int newStart=Math.max(block1.getReferenceStartPosition(), block2.getReferenceStartPosition());
-		int newEnd=Math.min(block1.getReferenceEndPosition(), block2.getReferenceEndPosition());
-		Strand consensus=Annotation.Strand.consensusStrand(block1.getOrientation(), block2.getOrientation());
-		return new SingleInterval(block1.getReferenceName(), newStart, newEnd, consensus);
+	public int[] flatten() {
+		int[] endpoints = new int[getNumberOfBlocks() * 2];
+		int idx = 0;
+		Iterator<SingleInterval> thisBlocks = getBlocks();
+		while (thisBlocks.hasNext()) {
+			SingleInterval block = thisBlocks.next();
+			endpoints[idx++] = block.getReferenceStartPosition();
+			endpoints[idx++] = block.getReferenceEndPosition();
+		}
+		return endpoints;
+	}
+	
+	/**
+	 * Merges this annotation with another. The type of merging is determined by the
+	 * second parameter, op.
+	 * @param other is the other annotation to merge with this one
+	 * @param op is the function which defines the type of merge. For example, merging
+	 * two annotations to obtain the union will require the argument to be
+	 * (a, b) -> a || b
+	 * @return the annotation resulting from the merge
+	 */
+	public Annotation merge(Annotation other, BiFunction<Boolean, Boolean, Boolean> op) {
+		if (other == null) {
+			return null;
+		}
+		Strand consensus = Strand.consensusStrand(this.getOrientation(), other.getOrientation());
+		if (consensus.equals(Strand.INVALID)) {
+			return null;
+		}
+		if (!getReferenceName().equals(other.getReferenceName())) {
+			return null;
+		}
+		if (getNumberOfBlocks() == 0 || other.getNumberOfBlocks() == 0) {
+			return null;
+		}
+		
+		// Flatten the annotations and add a sentinel value at the end
+		int[] thisFlattened = flatten();
+		int[] otherFlattened = other.flatten();
+		
+		int[] thisEndpoints = new int[thisFlattened.length + 1];
+		for (int i = 0; i < thisFlattened.length; i++) {
+			thisEndpoints[i] = thisFlattened[i];
+		}
+		int[] otherEndpoints = new int[otherFlattened.length + 1];
+		for (int i = 0; i < otherFlattened.length; i++) {
+			otherEndpoints[i] = otherFlattened[i];
+		}
+
+		int sentinel = Math.max(thisEndpoints[thisEndpoints.length - 2],
+								otherEndpoints[otherEndpoints.length - 2]) + 1;
+		thisEndpoints[thisEndpoints.length - 1] = sentinel;
+		otherEndpoints[otherEndpoints.length - 1] = sentinel;
+		
+		// Go through the flattened annotations and at each endpoint, determine whether
+		// it is in the result
+		int thisIdx = 0;
+		int otherIdx = 0;
+		List<Integer> rtrnEndpoints = new ArrayList<Integer>();
+		int scan = Math.min(thisEndpoints[thisIdx], otherEndpoints[otherIdx]);
+		while (scan < sentinel) {
+			boolean in_this = !((scan < thisEndpoints[thisIdx]) ^ (thisIdx % 2 == 1));
+			boolean in_other = !((scan < otherEndpoints[otherIdx]) ^ (otherIdx % 2 == 1));
+			boolean in_result = op.apply(in_this, in_other);
+			
+			if (in_result ^ (rtrnEndpoints.size() % 2 == 1)) {
+				rtrnEndpoints.add(scan);
+			}
+			if (scan == thisEndpoints[thisIdx]) {
+				thisIdx++;
+			}
+			if (scan == otherEndpoints[otherIdx]) {
+				otherIdx++;
+			}
+			scan = Math.min(thisEndpoints[thisIdx], otherEndpoints[otherIdx]);
+		}
+		for (int i = 0; i < rtrnEndpoints.size(); i++) {
+			System.out.println(rtrnEndpoints.get(i));
+		}
+		// Construct the resulting annotation
+		BlockedAnnotation rtrn = new BlockedAnnotation(getReferenceName());
+		for (int i = 0; i < rtrnEndpoints.size(); i += 2) {
+			rtrn.addBlocks(new SingleInterval(getReferenceName(), rtrnEndpoints.get(i), rtrnEndpoints.get(i + 1)));
+		}
+		rtrn.setOrientation(consensus);
+		
+		return rtrn;
+	}
+	
+	@Override
+	public Annotation minus(Annotation other) {
+		return merge(other, (a, b) -> a && !b);
+	}
+	
+	@Override
+	public Annotation union(Annotation other) {
+		return merge(other, (a, b) -> a || b);
+	}
+	
+	@Override
+	public Annotation intersect(Annotation other) {
+		return merge(other, (a, b) -> a && b);
+	}
+	
+	@Override
+	public Annotation xor(Annotation other) {
+		return merge(other, (a, b) -> a ^ b);
+	}
+	
+	@Override
+	public Annotation merge(Annotation other) {
+		if (other == null) {
+			return this;
+		}
+		Strand consensusStrand = Strand.consensusStrand(getOrientation(), other.getOrientation());
+		if (consensusStrand.equals(Strand.INVALID)) {
+			return null;
+		}
+		BlockedAnnotation rtrn = new BlockedAnnotation();
+		Iterator<SingleInterval> thisBlocks = getBlocks();
+		while (thisBlocks.hasNext()) {
+			rtrn.addBlocks(thisBlocks.next());
+		}
+		Iterator<SingleInterval> otherBlocks = other.getBlocks();
+		while (otherBlocks.hasNext()) {
+			rtrn.addBlocks(otherBlocks.next());
+		}
+		return rtrn;
+	}
+	
+	@Override
+	public boolean overlaps(Annotation other) {
+		if (other == null) {
+			return false;
+		}
+		Iterator<SingleInterval> blocks1 = getBlocks();
+		while (blocks1.hasNext()) {
+			SingleInterval block1 = blocks1.next();
+			Iterator<SingleInterval> blocks2 = other.getBlocks();
+			while (blocks2.hasNext()){
+				SingleInterval block2 = blocks2.next();
+				if (block1.overlaps(block2)) {
+					return true;
+				}
+			}	
+		}
+		return false;
 	}
 
 	@Override
-	public Annotation merge(Annotation other) {
-		throw new UnsupportedOperationException("Method broken");
-//		BlockedAnnotation rtrn=new BlockedAnnotation();
-//		Iterator<SingleInterval> blocks1=getBlocks();
-//		while(blocks1.hasNext()){
-//			SingleInterval block1=blocks1.next();
-//			Iterator<SingleInterval> blocks2=other.getBlocks();
-//			while(blocks2.hasNext()){
-//				SingleInterval block2=blocks2.next();
-//				if(block1.overlaps(block2)){
-//					SingleInterval merge=merge(block1, block2);
-//					if(merge!=null){rtrn.addBlocks(merge);}
-//				}
-//			}
-//			
-//		}
-//		return rtrn;
+	public boolean contains(Annotation other) {
+		return equals(union(other));
 	}
-
+	
 	protected SingleInterval merge(SingleInterval block1, SingleInterval block2) {
 		if(!overlaps(block1, block2)){return null;}
 		
@@ -88,30 +207,6 @@ public abstract class AbstractAnnotation implements Annotation {
 		int newEnd=Math.max(block1.getReferenceEndPosition(), block2.getReferenceEndPosition());
 		Strand consensus=Annotation.Strand.consensusStrand(block1.getOrientation(), block2.getOrientation());
 		return new SingleInterval(block1.getReferenceName(), newStart, newEnd, consensus);
-	}
-
-	@Override
-	public Annotation minus(Annotation other) {
-		// FIXME Auto-generated method stub
-		throw new UnsupportedOperationException("TODO");
-	}
-	
-	@Override
-	public boolean overlaps(Annotation other) {
-		//TODO This method still needs to be tested to ensure that it does what we expect
-		//Check if the blocks overlap
-		Iterator<SingleInterval> blocks1=getBlocks();
-		while(blocks1.hasNext()){
-			SingleInterval block1=blocks1.next();
-			Iterator<SingleInterval> blocks2=other.getBlocks();
-			while(blocks2.hasNext()){
-				SingleInterval block2=blocks2.next();
-				if(overlaps(block1, block2)){
-					return true;
-				}
-			}	
-		}
-		return false;
 	}
 	
 	/**
@@ -130,12 +225,6 @@ public abstract class AbstractAnnotation implements Annotation {
 		}
 		
 		return false;
-	}
-
-	@Override
-	public boolean contains(Annotation other) {
-		// FIXME Auto-generated method stub
-		throw new UnsupportedOperationException("TODO");
 	}
 	
 	@Override
@@ -370,8 +459,12 @@ public abstract class AbstractAnnotation implements Annotation {
 	@Override
 	public boolean equals(Object other)
 	{
-		if(other instanceof Annotation)
-			return this.compareToAnnotation((Annotation)other)==0;
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof Annotation) {
+			return this.compareTo((Annotation)other) == 0;
+		}
 		return false;
 	}
 	

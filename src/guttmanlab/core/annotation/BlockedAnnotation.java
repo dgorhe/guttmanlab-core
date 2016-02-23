@@ -24,8 +24,9 @@ public class BlockedAnnotation extends AbstractAnnotation {
 	 * An empty constructor
 	 */
 	public BlockedAnnotation(){
-		this.blocks=new IntervalTree<SingleInterval>();
-		this.started=false;
+		this.blocks = new IntervalTree<SingleInterval>();
+		this.started = false;
+		this.orientation = Strand.UNKNOWN;
 	}
 	
 	/**
@@ -70,7 +71,7 @@ public class BlockedAnnotation extends AbstractAnnotation {
 		boolean added=false;
 		Iterator<SingleInterval> exons=annot.getBlocks();
 		while(exons.hasNext()){
-			added=update(exons.next());
+			added &= update(exons.next());
 		}
 		return added;
 	}
@@ -81,41 +82,43 @@ public class BlockedAnnotation extends AbstractAnnotation {
 	 * @return whether it was successfully added
 	 */
 	private boolean update(SingleInterval interval) {
-		if(!started){
-			this.referenceName=interval.getReferenceName();
-			this.startPosition=interval.getReferenceStartPosition();
-			this.endPosition=interval.getReferenceEndPosition();
-			this.orientation=interval.getOrientation();
-			started=true;
-		}
-		else{
-			if(!this.referenceName.equalsIgnoreCase(interval.getReferenceName())){return false;}
-			if(!this.orientation.equals(interval.getOrientation())){return false;}
-			this.startPosition=Math.min(startPosition, interval.getReferenceStartPosition());
-			this.endPosition=Math.max(endPosition, interval.getReferenceEndPosition());
+		if (!started) {
+			this.referenceName = interval.getReferenceName();
+			this.startPosition = interval.getReferenceStartPosition();
+			this.endPosition = interval.getReferenceEndPosition();
+			this.orientation = interval.getOrientation();
+			started = true;
+		} else {
+			if (!this.referenceName.equalsIgnoreCase(interval.getReferenceName())) {
+				return false;
+			}
+			if (!this.orientation.equals(interval.getOrientation())) {
+				return false;
+			}
+			this.startPosition = Math.min(startPosition, interval.getReferenceStartPosition());
+			this.endPosition = Math.max(endPosition, interval.getReferenceEndPosition());
 		}
 		
-		boolean hasOverlappers=blocks.hasOverlappers(interval.getReferenceStartPosition(), interval.getReferenceEndPosition());
-		SingleInterval merged=interval;
-		if(hasOverlappers){
+		boolean hasOverlappers = blocks.hasOverlappers(interval.getReferenceStartPosition(), interval.getReferenceEndPosition());
+		SingleInterval merged = interval;
+		if (hasOverlappers){
 			//pull, merge, and update
-			Iterator<SingleInterval> iter=blocks.overlappingValueIterator(interval.getReferenceStartPosition(), interval.getReferenceEndPosition());
-			while(iter.hasNext()){
-				SingleInterval e=iter.next();
+			Iterator<SingleInterval> iter = blocks.overlappingValueIterator(interval.getReferenceStartPosition(), interval.getReferenceEndPosition());
+			while (iter.hasNext()) {
+				SingleInterval e = iter.next();
 				blocks.remove(e.getReferenceStartPosition(), e.getReferenceEndPosition()); // Pam added on 12/24/14
-				merged=merge(merged, e);
-				size-=e.size();
+				merged = merge(merged, e);
+				size -= e.size();
 			}
 		}
 		int end = merged.getReferenceEndPosition();
 		int start = merged.getReferenceStartPosition();
-		if(start>end) {
-			blocks.put(end,start, merged);
-		}
-		else {
+		if (start > end) {
+			blocks.put(end, start, merged);
+		} else {
 			blocks.put(start, end, merged);
 		}
-		size+=merged.size();
+		size += merged.size();
 		
 		return true;
 	}
@@ -195,7 +198,11 @@ public class BlockedAnnotation extends AbstractAnnotation {
 
 	@Override
 	public void setOrientation(Strand orientation) {
-		this.orientation=orientation;
+		this.orientation = orientation;
+		Iterator<SingleInterval> exons = getBlocks();
+		while (exons.hasNext()) {
+			exons.next().setOrientation(orientation);
+		}
 	}
 
 	@Override

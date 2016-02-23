@@ -74,8 +74,6 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 	private <X extends Annotation> AnnotationCollection<DerivedAnnotation<X>> convertFromReferenceSpace(AnnotationCollection<X> readCollection, CoordinateSpace referenceSpace, boolean fullyContained){
 		return new ConvertedSpace<X>(readCollection, this, referenceSpace, fullyContained);
 	}
-
-	
 	
 	@Override
 	public CloseableIterator<? extends PopulatedWindow<T>> getPopulatedWindows(Annotation region, int windowLength){

@@ -3,6 +3,7 @@ package guttmanlab.core.annotationcollection;
 import guttmanlab.core.annotation.MappedFragment;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
@@ -47,8 +48,9 @@ public class BAMFragmentCollectionFactory {
 	 * Get an appropriate implementation of annotation collection depending on whether the reads are paired
 	 * @param bamFile Bam file
 	 * @return Single or paired end read collection
+	 * @throws IOException 
 	 */
-	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(String bamFile) {
+	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(String bamFile) throws IOException {
 		return createFromBam(new File(bamFile));
 	}
 	
@@ -56,8 +58,9 @@ public class BAMFragmentCollectionFactory {
 	 * Get an appropriate implementation of annotation collection depending on whether the reads are paired
 	 * @param bamFile Bam file
 	 * @return Single or paired end read collection
+	 * @throws IOException 
 	 */
-	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(File bamFile) {
+	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(File bamFile) throws IOException {
 		return createFromBam(bamFile, false);
 	}
 	
@@ -67,8 +70,9 @@ public class BAMFragmentCollectionFactory {
 	 * @param bamFile Bam file
 	 * @param forceSingleEnd Treat reads as single end even if they are paired
 	 * @return Single or paired end read collection
+	 * @throws IOException 
 	 */
-	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(String bamFile, boolean forceSingleEnd) {
+	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(String bamFile, boolean forceSingleEnd) throws IOException {
 		return createFromBam(new File(bamFile), forceSingleEnd);
 	}
 	
@@ -78,8 +82,9 @@ public class BAMFragmentCollectionFactory {
 	 * @param bamFile Bam file
 	 * @param forceSingleEnd Treat reads as single end even if they are paired
 	 * @return Single or paired end read collection
+	 * @throws IOException 
 	 */
-	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(File bamFile, boolean forceSingleEnd) {
+	public static AbstractAnnotationCollection<? extends MappedFragment> createFromBam(File bamFile, boolean forceSingleEnd) throws IOException {
 		
 		if(forceSingleEnd) {
 			logger.info("Reading bam file " + bamFile.getName() + " and forcing single end implementation.");
