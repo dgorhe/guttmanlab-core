@@ -7,10 +7,9 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * A class that represent a simple contiguous interval
- * This is the basis for all features
- * @author mguttman
- *
+ * The SingleInterval class represents a simple contiguous interval.
+ * This is the basis for all features.
+ * Interval coordinates are zero-based, left-closed and right-open.
  */
 public class SingleInterval extends AbstractAnnotation{
 
@@ -19,21 +18,52 @@ public class SingleInterval extends AbstractAnnotation{
 	private int endPos;
 	private Strand orientation;
 	private String featureName;
+
+	/**
+	 * Constructs an interval. Start and end coordinates are zero-based, left-closed and right-open.
+	 * @param refName is the name of the reference
+	 * @param start is the start coordinate
+	 * @param end is the end coordinate
+	 * @param orientation is the strandedness of the SingleInterval
+	 * @param featureName is the name of this feature
+	 */
+	public SingleInterval(String refName, int start, int end, Strand orientation, String featureName){
+		this.referenceName = refName;
+		this.startPos = start;
+		this.endPos = end;
+		this.orientation = orientation;
+		this.featureName = featureName;
+	}
 	
+	/**
+	 * Constructs an interval. Start and end coordinates are zero-based, left-closed and right-open. The feature name
+	 * is simply the empty string.
+	 * @param refName is the name of the reference
+	 * @param start is the start coordinate
+	 * @param end is the end coordinate
+	 * @param orientation is the strandedness of the SingleInterval
+	 */
 	public SingleInterval(String refName, int start, int end, Strand orientation){
 		this(refName, start, end, orientation, "");
 	}
 	
-	public SingleInterval(String refName, int start, int end, Strand orientation, String featureName){
-		this.referenceName=refName;
-		this.startPos=start;
-		this.endPos=end;
-		this.orientation=orientation;
-		this.featureName=featureName;
-	}
-	
+	/**
+	 * Constructs an interval. Start and end coordinates are zero-based, left-closed and right-open. The feature name
+	 * is simply the empty string. The orientation is set to Strand.UNKNOWN
+	 * @param refName is the name of the reference
+	 * @param start is the start coordinate
+	 * @param end is the end coordinate
+	 */
 	public SingleInterval(String refName, int start, int end) {
 		this(refName, start, end, Strand.UNKNOWN, "");
+	}
+	
+	/**
+	 * Copy constructor
+	 * @param s is the single interval to copy
+	 */
+	public SingleInterval(SingleInterval a) {
+		this(a.getReferenceName(), a.getReferenceStartPosition(), a.getReferenceEndPosition(), a.getOrientation(), a.getName());
 	}
 
 	@Override
@@ -56,17 +86,25 @@ public class SingleInterval extends AbstractAnnotation{
 		return this.endPos;
 	}
 
-
+	/**
+	 * Returns an iterator over the contained blocks. (Note: This is a SingleInterval, so
+	 * it only has one block. This method exists to maintain/unify the interface of other methods.)
+	 * @return an iterator over the one contained block
+	 */
 	@Override
 	public Iterator<SingleInterval> getBlocks() {
-		Collection<SingleInterval> rtrn=new ArrayList<SingleInterval>();
+		Collection<SingleInterval> rtrn = new ArrayList<SingleInterval>();
 		rtrn.add(this);
 		return rtrn.iterator();
 	}
 	
+	/**
+	 * The size of this interval, measured by simply subtracting the start position from the end position.
+	 * @return The size of this interval
+	 */
 	@Override
 	public int size() {
-		return endPos-startPos;
+		return endPos - startPos;
 	}
 
 	@Override
@@ -92,44 +130,73 @@ public class SingleInterval extends AbstractAnnotation{
 
 	@Override
 	public void setOrientation(Strand orientation) {
-		this.orientation=orientation;
+		this.orientation = orientation;
 	}
 
 	/**
-	 * Trim this block to the relative start and end position provided
-	 * @param relativeStartPosition relative start position
-	 * @param relativeEndPosition relative end position
-	 * @return
+	 * Trims this block to the relative start and end position provided. Preserves the reference name
+	 * and the orientation. SingleIntervals with an orientation of 'unknown', 'both', or 'invalid' are
+	 * trimmed as though they have a positive orientation.
+	 * @param relativeStartPosition is the new start position, relative to the old
+	 * @param relativeEndPosition is the new end position, relative to the old
+	 * @return a new SingleInterval with the ends appropriately trimmed
 	 */
 	public SingleInterval trim(int relativeStart, int relativeEnd) {
-		if(getOrientation().equals(Strand.NEGATIVE)){
-			int newEnd=getReferenceEndPosition()-relativeStart;
-			int newStart=getReferenceEndPosition()-relativeEnd;
-			return new SingleInterval(getReferenceName(), newStart, newEnd);
+		if (getOrientation().equals(Strand.NEGATIVE)) {
+			int newEnd = getReferenceEndPosition() - relativeStart;
+			int newStart = getReferenceEndPosition() - relativeEnd;
+			return new SingleInterval(getReferenceName(), newStart, newEnd, getOrientation());
+		} else {
+			int newEnd = getReferenceStartPosition() + relativeEnd;
+			int newStart = getReferenceStartPosition() + relativeStart;
+			return new SingleInterval(getReferenceName(), newStart, newEnd, getOrientation());
 		}
-		else{
-			return new SingleInterval(getReferenceName(), getReferenceStartPosition()+relativeStart, getReferenceStartPosition()+relativeEnd);
-		}
-	}
-/*
-    //9/25/14 @cburghard methods overwritten in AbstractAnnotation
-	public int hashCode() {
-		String s = referenceName + "_" + featureName + "_" + startPos + "_" + endPos + "_" + orientation.toString();
-		return s.hashCode();
 	}
 	
-	public boolean equals(Object o) {
-		if(!o.getClass().equals(getClass())) return false;
-		SingleInterval other = (SingleInterval) o;
-		if(startPos != other.startPos) return false;
-		if(endPos != other.endPos) return false;
-		if(!orientation.equals(other.orientation)) return false;
-		if(!referenceName.equals(other.referenceName)) return false;
-		if(!featureName.equals(other.featureName)) return false;
-		return true;
+	/**
+	 * Determines if this SingleInterval contains (fully) another Annotation. This method will return false if
+	 * <li>the consensus sequence is Strand.INVALID</li>
+	 * <li>the reference names do not match</li>
+	 * <li>the method is pass a null object</li>
+	 * @param other is the other interval
+	 * @return whether or not this SingleInterval overlaps with another
+	 */
+	public boolean contains(Annotation other) {
+		if (other == null) {
+			return false;
+		}
+		boolean namesMatch = getReferenceName().equalsIgnoreCase(other.getReferenceName());
+		boolean validConsensusStrand = Strand.consensusStrand(getOrientation(), other.getOrientation()) != Strand.INVALID;
+		boolean fivePrimeOK = getReferenceStartPosition() <= other.getReferenceStartPosition();
+		boolean threePrimeOK = getReferenceEndPosition() >= other.getReferenceEndPosition();
+
+		return namesMatch && validConsensusStrand && fivePrimeOK && threePrimeOK;
 	}
-*/
-	@Override
+	
+	/**
+	 * Determines if this SingleInterval overlaps another SingleInterval. This method will return false if
+	 * <li>the consensus sequence is Strand.INVALID</li>
+	 * <li>the reference names do not match</li>
+	 * <li>the method is passed a null object</li>
+	 * @param other is the other interval
+	 * @return whether or not this SingleInterval overlaps with another
+	 */
+	public boolean overlaps(SingleInterval other) {
+		if (other == null) {
+			return false;
+		}
+		int newStart = Math.max(getReferenceStartPosition(), other.getReferenceStartPosition());
+		int newEnd = Math.min(getReferenceEndPosition(), other.getReferenceEndPosition());
+		boolean referencesMatch = getReferenceName().equalsIgnoreCase(other.getReferenceName());
+		boolean validConsensusStrand = Annotation.Strand.consensusStrand(getOrientation(), other.getOrientation()) != Strand.INVALID;
+
+		return newStart < newEnd && referencesMatch && validConsensusStrand;
+	}
+	
+	/**
+	 * This method does not work. Do not use.
+	 */
+	@Override // FIXME
 	public AnnotationCollection<DerivedAnnotation<? extends Annotation>> getWindows(
 			int windowSize, int stepSize) {
 		throw new UnsupportedOperationException();

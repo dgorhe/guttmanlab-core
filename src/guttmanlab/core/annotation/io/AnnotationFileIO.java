@@ -3,6 +3,7 @@ package guttmanlab.core.annotation.io;
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -18,6 +19,6 @@ public interface AnnotationFileIO<T extends Annotation> {
 	 * @return The collection of annotations described in the file
 	 * @throws IOException 
 	 */
-	public  AnnotationCollection<T> loadFromFile(String fileName) throws IOException;
+	public AnnotationCollection<T> loadFromFile(File fileName) throws IOException;
 	
 }

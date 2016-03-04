@@ -1,128 +1,165 @@
 package guttmanlab.core.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
+import java.util.Iterator;
+
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.BlockedAnnotation;
-import guttmanlab.core.annotation.DerivedAnnotation;
-import guttmanlab.core.annotation.PairedMappedFragment;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.Annotation.Strand;
-import guttmanlab.core.annotation.predicate.PairedFilterWrapper;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class AnnotationTest {
-		private Annotation pos;
-		private Annotation pos2;
-		private Annotation neg;
-		private Annotation both;
+		private SingleInterval block1;
+		private SingleInterval block2;
+		private SingleInterval block3;
 		
 	@Before
-	public void setUp() throws Exception {
-		 pos = new BlockedAnnotation();
-		 pos2 = new BlockedAnnotation();
-		 neg = new BlockedAnnotation();
-		 both = new BlockedAnnotation();
-		
-		pos.setOrientation(Strand.POSITIVE);
-		pos2.setOrientation(Strand.POSITIVE);
-		neg.setOrientation(Strand.NEGATIVE);
-		both.setOrientation(Strand.BOTH);
+	public void setUp() {
+		block1 = new SingleInterval("a1", 100, 300);
+		block2 = new SingleInterval("a1", 350, 500);
+		block3 = new SingleInterval("a1", 600, 700);
 	}
 
 	@Test
-	public void EqualsShouldCompareEnumValues() {
-		Strand strand1 = pos.getOrientation();
-		Strand strand2 = pos2.getOrientation();
-		Strand strand3 = neg.getOrientation();
+	public void testStrand() {
+		Annotation pos1 = new BlockedAnnotation();
+		Annotation pos2 = new BlockedAnnotation();
+		Annotation neg = new BlockedAnnotation();
+		Annotation both = new BlockedAnnotation();
+		Annotation unknown = new BlockedAnnotation();
 		
-		assertEquals("two positive strands should be equal",strand1.equals(strand2),true);
-		assertEquals("two different orientations should be not equal",strand2.equals(strand3),false);
+		pos1.setOrientation(Strand.POSITIVE);
+		pos2.setOrientation(Strand.POSITIVE);
+		neg.setOrientation(Strand.NEGATIVE);
+		both.setOrientation(Strand.BOTH);
+		
+		Strand posStrand1 = pos1.getOrientation();
+		Strand posStrand2 = pos2.getOrientation();
+		Strand negStrand = neg.getOrientation();
+		Strand unknownStrand = unknown.getOrientation();
+		
+		assertEquals("Two positive strands should be equal.", posStrand1, posStrand2);
+		assertNotEquals("Two different orientations should be not equal.", posStrand2, negStrand);
+		assertEquals("An annotation with an unset orientation should return Strand.UNKNOWN", unknownStrand, Strand.UNKNOWN);
 	}
 	
-	@Test 
-	public void trimAnnotationTest()
-	{
-
+	@Test
+	public void testSetOrientation() {
 		BlockedAnnotation blocked = new BlockedAnnotation();
-		//DerivedAnnotation converted = new DerivedAnnotation(both, both);
-		//PairedMappedFragment paired = new PairedMappedFragment<>(pair));
-		SingleInterval block1 = new SingleInterval("a1",100,300);
-		SingleInterval block2 = new SingleInterval("a1",350,500);
-		SingleInterval block3 = new SingleInterval("a1",600,700);
-		
 		blocked.addBlocks(block1);
 		blocked.addBlocks(block2);
 		blocked.addBlocks(block3);
 		
 		blocked.setOrientation(Strand.POSITIVE);
-		Annotation blocked1 = blocked.trim(0,800);    //no trimming
-		Annotation blocked2 = blocked.trim(150,650);  //trim first and last exon
-		Annotation blocked3 = blocked.trim(330,550);  //between exons
-		
-		System.out.println(blocked.toString());
-		System.out.println(blocked1.toString());
-		System.out.println(blocked2.toString());
-		System.out.println(blocked3.toString()+"\n");
-		
-		blocked.setOrientation(Strand.NEGATIVE);
-		blocked1 = blocked.trim(0,800);    //no trimming
-	    blocked2 = blocked.trim(150,650);  //trim first and last exon
-		blocked3 = blocked.trim(330,550);  //between exons
-		
-		System.out.println(blocked.toString());
-		System.out.println(blocked1.toString());
-		System.out.println(blocked2.toString());
-		System.out.println(blocked3.toString());
-		blocked.setOrientation(Strand.BOTH);
-		
-		/*
-		PairedMappedFragment paired1 = paired.trim(0,800);
-		PairedMappedFragment paired2 = paired.trim(0,800);
-		PairedMappedFragment paired3 = paired.trim(0,800);
-		
-		DerivedAnnotation converted1 = converted.trim(0,800);
-		DerivedAnnotation converted2 = converted.trim(0,800);
-		DerivedAnnotation converted3 = converted.trim(0,800);
-		*/
-		
-		
+		Iterator<SingleInterval> iter = blocked.getBlocks();
+		assertEquals("First block orientation not equal to blocked orientation", iter.next().getOrientation(), blocked.getOrientation());
+		assertEquals("Middle block orientation not equal to blocked orientation", iter.next().getOrientation(), blocked.getOrientation());
+		assertEquals("Last block orientation not equal to blocked orientation", iter.next().getOrientation(), blocked.getOrientation());
 	}
 	
 	@Test 
-	public void testHashCodeEquals()
-	{
+	public void testTrimAnnotationPos() {
 		BlockedAnnotation blocked = new BlockedAnnotation();
-		BlockedAnnotation blocked2 = new BlockedAnnotation();
-		BlockedAnnotation blocked3 = new BlockedAnnotation();
-
-		//DerivedAnnotation converted = new DerivedAnnotation(both, both);
-		//PairedMappedFragment paired = new PairedMappedFragment<>(pair));
-		SingleInterval block1 = new SingleInterval("a1",100,300);
-		SingleInterval block2 = new SingleInterval("a1",350,500);
-		SingleInterval block3 = new SingleInterval("a1",600,700);
-	
 		blocked.addBlocks(block1);
 		blocked.addBlocks(block2);
 		blocked.addBlocks(block3);
+		
+		blocked.setOrientation(Strand.POSITIVE);
+		Annotation blocked1 = blocked.trim(0, 800);    // no trimming
+		Annotation blocked2 = blocked.trim(150, 650);  // trim first and last exon
+		Annotation blocked3 = blocked.trim(330, 550);  // between exons
+		
+		Iterator<SingleInterval> iter = blocked1.getBlocks();
+		SingleInterval trimmedBlock1 = iter.next();
+		SingleInterval trimmedBlock2 = iter.next();
+		SingleInterval trimmedBlock3 = iter.next();
+		
+		assertEquals("Trimming should not have removed any blocks.", blocked1.getNumberOfBlocks(), 3);
+		assertEquals("Trimming should not affect first block.", block1, trimmedBlock1);
+		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
+		assertEquals("Trimming should not affect last block.", block3, trimmedBlock3);
+		
+		iter = blocked2.getBlocks();
+		trimmedBlock1 = iter.next();
+		trimmedBlock2 = iter.next();
+		trimmedBlock3 = iter.next();
+		
+		assertEquals("Trimming should not have removed any blocks.", blocked2.getNumberOfBlocks(), 3);
+		assertEquals("First block is trimmed.", new SingleInterval("a1", 150, 300, Strand.POSITIVE), trimmedBlock1);
+		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
+		assertEquals("Last block is trimmed.", new SingleInterval("a1", 600, 650, Strand.POSITIVE), trimmedBlock3);
+		
+		iter = blocked3.getBlocks();
+		trimmedBlock2 = iter.next();
+		
+		assertEquals("Trimming should have removed the first and last block.", blocked3.getNumberOfBlocks(), 1);
+		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
+	}
+	
+	@Test 
+	public void testTrimAnnotationNeg() {
+		BlockedAnnotation blocked = new BlockedAnnotation();
+		blocked.addBlocks(block1);
+		blocked.addBlocks(block2);
+		blocked.addBlocks(block3);
+		
+		blocked.setOrientation(Strand.NEGATIVE);
+		Annotation blocked1 = blocked.trim(0, 800);    // no trimming
+		Annotation blocked2 = blocked.trim(150, 650);  // trim first and last exon
+		Annotation blocked3 = blocked.trim(330, 550);  // between exons
+		
+		Iterator<SingleInterval> iter = blocked1.getBlocks();
+		SingleInterval trimmedBlock1 = iter.next();
+		SingleInterval trimmedBlock2 = iter.next();
+		SingleInterval trimmedBlock3 = iter.next();
+		
+		assertEquals("Trimming should not have removed any blocks.", blocked1.getNumberOfBlocks(), 3);
+		assertEquals("Trimming should not affect first block.", block1, trimmedBlock1);
+		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
+		assertEquals("Trimming should not affect last block.", block3, trimmedBlock3);
+		
+		iter = blocked2.getBlocks();
+		trimmedBlock1 = iter.next();
+		trimmedBlock2 = iter.next();
+		trimmedBlock3 = iter.next();
+		
+		assertEquals("Trimming should not have removed any blocks.", blocked2.getNumberOfBlocks(), 3);
+		assertEquals("First block is trimmed.", new SingleInterval("a1", 150, 300, Strand.NEGATIVE), trimmedBlock1);
+		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
+		assertEquals("Last block is trimmed.", new SingleInterval("a1", 600, 650, Strand.NEGATIVE), trimmedBlock3);
+		
+		iter = blocked3.getBlocks();
+		trimmedBlock2 = iter.next();
+		
+		assertEquals("Trimming should have removed the first and last block.", blocked3.getNumberOfBlocks(), 1);
+		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
+	}
+	
+	@Test 
+	public void testHashCodeEquals() {
+		BlockedAnnotation blocked1 = new BlockedAnnotation();
+		BlockedAnnotation blocked2 = new BlockedAnnotation();
+		BlockedAnnotation blocked3 = new BlockedAnnotation();
+	
+		blocked1.addBlocks(block1);
+		blocked1.addBlocks(block2);
+		blocked1.addBlocks(block3);
 		
 		blocked2.addBlocks(block1);
 		blocked2.addBlocks(block2);
 		blocked2.addBlocks(block3);
 		
 		blocked3.addBlocks(block3);
-		
-		System.out.println(blocked.hashCode());
-		System.out.println(blocked2.hashCode());
-		System.out.println(blocked3.hashCode());
-		System.out.println(block3.hashCode());
-		
-		assertEquals("blocked1 and 3 not equal.",false,blocked.equals(blocked3));
-		assertEquals("blocked1 and 2 equal.",true,blocked.equals(blocked2));
-		assertEquals("blocked3 and single interval 3 equal.",true,block3.equals(blocked3));
-		assertEquals("blocked3 and single interval 3 have same hash code.",true,blocked3.hashCode()==block3.hashCode());
-		assertEquals("blocked2 and 3 have different hash codes.",false,blocked3.hashCode()==blocked2.hashCode());
+				
+		assertNotEquals("blocked1 and blocked3 should not be equal.", blocked1, blocked3);
+		assertEquals("blocked1 and blocked2 should be equal.", blocked1, blocked2);
+		assertEquals("blocked3 and block3 should be equal.", block3, blocked3);
+		assertEquals("blocked3 and block3 should have same hash code.", blocked3.hashCode(), block3.hashCode());
+		assertNotEquals("blocked2 and block3 should have different hash codes.", blocked3.hashCode(), blocked2.hashCode());
 	}
-
 }

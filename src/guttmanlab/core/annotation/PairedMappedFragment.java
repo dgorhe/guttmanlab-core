@@ -111,7 +111,7 @@ public class PairedMappedFragment<T extends Annotation> extends AbstractNamedAnn
 
 	@Override
 	public void setOrientation(Strand orientation) {
-		// Empty method
+		throw new UnsupportedOperationException("");
 	}
 
 	@Override

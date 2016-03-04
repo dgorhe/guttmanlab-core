@@ -46,6 +46,7 @@ public class GetWindowsTest {
 		this.io =  new BEDFileIO("/storage/shared/CoreTestData/refspace.txt"); //use existing coordinateSpace?
 		this.features = io.loadFromFile(fname);
 	}
+	//test
 	
 	//Test a single exon positive gene with only three reads
 	@Test //Pass
