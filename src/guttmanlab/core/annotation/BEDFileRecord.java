@@ -2,7 +2,6 @@ package guttmanlab.core.annotation;
 
 import java.awt.Color;
 import java.util.Iterator;
-import java.util.Optional;
 
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 
@@ -82,12 +81,11 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 	}
 	
 	/**
-	 * Returns the color of this BED record as an Optional, or returns an empty Optional if
-	 * this record has no specified color.
+	 * Returns the color of this BED record
 	 * @return the color of this BED record
 	 */
-	public Optional<Color> color() {
-		return Optional.ofNullable(color);
+	public Color color() {
+		return color;
 	}
 
 	@Override
@@ -274,7 +272,7 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 		
 		// Add orientation
 		if (numFields >= 6) {
-			if (fields[5] != "+" && fields[5] != "-" && fields[5] != ".") {
+			if (!fields[5].equals("+") && !fields[5].equals("-") && !fields[5].equals(".")) {
 				throw new IllegalArgumentException("The strand field of the formatted BED string must either"
 						+ " be a '+', a '-', or a '.'");
 			}

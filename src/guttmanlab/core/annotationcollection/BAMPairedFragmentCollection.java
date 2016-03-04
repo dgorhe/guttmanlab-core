@@ -61,11 +61,11 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 	 * Constructs a collection of paired-end aligned fragments from a BAM file. Constructing this
 	 * object will create a temporary file which is essentially a modified BAM file that will support
 	 * iterating by matching read pairs. This temporary "fragment" file may be quite large.
-	 * @param bamFileName is the BAM filename
+	 * @param bamFilePath is the BAM file path
 	 * @throws IOException if the temporary fragment file cannot be written
 	 */
-	public BAMPairedFragmentCollection(String bamFileName) throws IOException {
-		this(new File(bamFileName));
+	public BAMPairedFragmentCollection(String bamFilePath) throws IOException {
+		this(new File(bamFilePath));
 	}
 
 	/**

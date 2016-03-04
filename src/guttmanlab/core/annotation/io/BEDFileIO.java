@@ -20,7 +20,7 @@ public class BEDFileIO implements AnnotationFileIO<BEDFileRecord> {
 
 	private CoordinateSpace referenceSpace;
 	
-	public BEDFileIO(CoordinateSpace referenceSizes){
+	public BEDFileIO(CoordinateSpace referenceSizes) {
 		this.referenceSpace = referenceSizes;
 	}
 	
@@ -33,10 +33,14 @@ public class BEDFileIO implements AnnotationFileIO<BEDFileRecord> {
 		}
 	}
 	
+	public static void writeToFile(AnnotationCollection<? extends Annotation> regions, String outputBedFile) throws IOException {
+		writeToFile(regions, new File(outputBedFile));
+	}
+	
 	/**
 	 * Loads the contents of a BED file into memory. The contents are organized by reference name.
 	 * @param file is the BED file to open 
-	 * @param referenceSizes is the reference coordinate information containing reference names and sizes
+	 * @param refSpace is the reference coordinate space which contains reference names and sizes
 	 * @return A map from reference name to features on that reference described in the BED file
 	 * @throws IOException
 	 */

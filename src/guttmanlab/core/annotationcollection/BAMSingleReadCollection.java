@@ -35,13 +35,21 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 	
 	/**
 	 * Constructs a collection of single-read aligned fragments from a BAM file.
-	 * @param bamFile the BAM file containing the single-read alignments
+	 * @param bamFile is the BAM file containing the single-read alignments
 	 */
 	public BAMSingleReadCollection(File bamFile){
 		super();
 		this.reader = new SAMFileReader(bamFile);
 		this.referenceSpace = new CoordinateSpace(reader.getFileHeader());
 		this.bamFile = bamFile;
+	}
+
+	/**
+	 * Constructs a collection of single-read aligned fragments from a BAM file.
+	 * @param bamFilePath is the path of the BAM file containing the single-read alignments
+	 */
+	public BAMSingleReadCollection(String bamFilePath) {
+		this(new File(bamFilePath));
 	}
 	
 	@Override
