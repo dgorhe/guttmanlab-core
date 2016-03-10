@@ -11,6 +11,7 @@ import java.util.Iterator;
 import net.sf.samtools.util.CloseableIterator;
 
 import org.apache.commons.collections15.Predicate;
+import org.apache.log4j.Logger;
 
 public class FilteredIterator<T extends Annotation> implements CloseableIterator<T>{
 
@@ -19,6 +20,7 @@ public class FilteredIterator<T extends Annotation> implements CloseableIterator
 		T next;
 		boolean started;
 		StrandFilter<T> sf;
+		public static Logger logger = Logger.getLogger(FilteredIterator.class.getName());
 		
 		public FilteredIterator(CloseableIterator<T> iter, Collection<Predicate<T>> filters){
 			this.iter=iter;
