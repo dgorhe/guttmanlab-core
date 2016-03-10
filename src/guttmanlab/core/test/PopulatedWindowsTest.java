@@ -2,6 +2,7 @@ package guttmanlab.core.test;
 
 import static org.junit.Assert.*;
 import guttmanlab.core.annotation.Annotation;
+import guttmanlab.core.annotation.BEDFileRecord;
 import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.io.BEDFileIO;
@@ -25,8 +26,8 @@ public class PopulatedWindowsTest {
 	private BAMPairedFragmentCollection data;
 	private String fname;
 	private BEDFileIO io;
-	private AnnotationCollection<Gene> features;	
-	private Gene gene;
+	private AnnotationCollection<BEDFileRecord> features;	
+	private BEDFileRecord gene;
 	private static Logger logger = Logger.getLogger(PopulatedWindowsTest.class.getName());
 	
 	@Before
@@ -36,9 +37,9 @@ public class PopulatedWindowsTest {
 		fname = "/Users/prussell/Documents/lncRNA/Peak_caller_testing/genes.bed";  
 		io =  new BEDFileIO("/Users/prussell/Documents/lncRNA/Peak_caller_testing/sizes");
 		features = io.loadFromFile(fname);
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 		while(iter.hasNext()) {
-			Gene g = iter.next();
+			BEDFileRecord g = iter.next();
 			if(g.getName().equals("NM_029432")) {
 				gene = g;
 				break;

@@ -3,12 +3,14 @@ package guttmanlab.core.test;
 import static org.junit.Assert.*;
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.DerivedAnnotation;
-import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BEDFileRecord;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
+import guttmanlab.core.coordinatespace.CoordinateSpace;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,21 +23,21 @@ public class AnnotationGetWindowsTest {
 	private static String bedFile = "/storage/Annotations/RefSeq/mm9/RefSeq.bed";
 	private static String referenceSizes = "/storage/Genomes/mm9/sizes";
 	
-	private Map<String, FeatureCollection<Gene>> genesByReference;
-	private FeatureCollection<Gene> genesChr1;
-	private Gene geneMinus;
-	private Gene genePlus;
+	private Map<String, FeatureCollection<BEDFileRecord>> genesByReference;
+	private FeatureCollection<BEDFileRecord> genesChr1;
+	private BEDFileRecord geneMinus;
+	private BEDFileRecord genePlus;
 	
 	@Before
 	public void setUp() {
 		try {
-			genesByReference = BEDFileIO.loadFromFileByReferenceName(bedFile, referenceSizes);
+			genesByReference = BEDFileIO.loadFromFileByReferenceName(new File(bedFile), new CoordinateSpace(referenceSizes));
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);
 		}
 		genesChr1 = genesByReference.get("chr1");
-		Iterator<Gene> iter = genesChr1.iterator();
+		Iterator<BEDFileRecord> iter = genesChr1.iterator();
 		iter.hasNext();
 		geneMinus = iter.next();
 		System.out.println(geneMinus.toBED());

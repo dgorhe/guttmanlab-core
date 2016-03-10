@@ -81,6 +81,13 @@ public class Sequence {
 	}
 	
 	/**
+	 * @return Sequence length
+	 */
+	public int getLength() {
+		return sequence.length();
+	}
+	
+	/**
 	 * Get subsequence
 	 * @param name Name of new sequence to return
 	 * @param start Start position of subsequence

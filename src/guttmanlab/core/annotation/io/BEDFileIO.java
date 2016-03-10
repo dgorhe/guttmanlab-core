@@ -24,6 +24,10 @@ public class BEDFileIO implements AnnotationFileIO<BEDFileRecord> {
 		this.referenceSpace = referenceSizes;
 	}
 	
+	public BEDFileIO(String fileName) {
+		this(new CoordinateSpace(fileName));
+	}
+	
 	public static void writeToFile(AnnotationCollection<? extends Annotation> regions, File outputBedFile) throws IOException {
 		try (FileWriter w = new FileWriter(outputBedFile)) {
 			Iterator<? extends Annotation> iter = regions.sortedIterator();

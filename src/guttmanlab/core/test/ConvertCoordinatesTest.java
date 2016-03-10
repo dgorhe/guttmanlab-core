@@ -9,6 +9,7 @@ import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.SAMFragment;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BEDFileRecord;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotation.predicate.MaximumLengthFilter;
 import guttmanlab.core.annotation.predicate.MinimumLengthFilter;
@@ -34,7 +35,7 @@ public class ConvertCoordinatesTest {
 	private CoordinateSpace refSpace;
 	private String fname;
 	private BEDFileIO io;
-	private AnnotationCollection<Gene> features;
+	private AnnotationCollection<BEDFileRecord> features;
 	
 	@Before
 	public void setUp() throws IOException
@@ -51,7 +52,7 @@ public class ConvertCoordinatesTest {
 	//Verifies that the correct number of reads are returned for Ccdc87, a single exon gene on the positive strand.
 	public void Ccdc87OverlapReadCount() throws IOException{
 		System.out.println("\n\nCcdc87 Mapped Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		//locate the feature of interest from the feature iterator
 		Annotation a = null;
@@ -82,7 +83,7 @@ public class ConvertCoordinatesTest {
 	//Verifies the correct number of overlapping reads are returned after conversion to feature space for Cd248.
 	public void Cd248ConvertCoordinates() throws IOException{
 		System.out.println("\n\nCd248 Converted Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -114,7 +115,7 @@ public class ConvertCoordinatesTest {
 	//Should fail; region is treated as start and end, should not include intron overlaps
 	public void Kcnk4Overlaps() throws IOException{
 		System.out.println("\n\nKcnk4 Mapped Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -144,7 +145,7 @@ public class ConvertCoordinatesTest {
 	//Verifies the correct reads are returned for CCdc87, a multi exon negative strand gene.
 	public void Kcnk4ConvertCoordinates() throws IOException{
 		System.out.println("\n\nKcnk4 Converted Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -178,7 +179,7 @@ public class ConvertCoordinatesTest {
 	public void Dkk1OverlapReadCount()
 	{
 		System.out.println("\n\nDkk1 Mapped Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -210,7 +211,7 @@ public class ConvertCoordinatesTest {
 	//Test a multi-exon negative gene for correct number of converted, fully contained overlaps
 	public void Dkk1ConvertCoordinatesFullyContained() throws IOException{
 		System.out.println("\n\nDkk1 Converted Reads (Fully Contained):");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -242,7 +243,7 @@ public class ConvertCoordinatesTest {
 	//Test a multi-exon negative gene for correct number of converted overlaps
 	public void Dkk1ConvertCoordinates() throws IOException{
 		System.out.println("\n\nDkk1 Converted Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -278,7 +279,7 @@ public class ConvertCoordinatesTest {
 		
 		BAMPairedFragmentCollection bamPair = new BAMPairedFragmentCollection(new File("/storage/shared/CoreTestData/chr19.clean.sorted.bam"));
 		System.out.println("\n\nCcdc87 Mapped Paired Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -312,7 +313,7 @@ public class ConvertCoordinatesTest {
 		BAMPairedFragmentCollection bamPair = new BAMPairedFragmentCollection(new File("/storage/shared/CoreTestData/chr19.clean.sorted.bam"));
 		
 		System.out.println("\n\nCcdc87 Converted Paired Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 

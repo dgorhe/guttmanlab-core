@@ -3,22 +3,18 @@ package guttmanlab.core.test;
 import static org.junit.Assert.*;
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.BlockedAnnotation;
-import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.SAMFragment;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BEDFileRecord;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotation.predicate.MaximumLengthFilter;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.BAMSingleReadCollection;
-import guttmanlab.core.coordinatespace.CoordinateSpace;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.util.CloseableIterator;
 
 import org.junit.Before;
@@ -27,18 +23,14 @@ import org.junit.Test;
 public class BAMSingleReadTest {
 
 	private BAMSingleReadCollection bam;
-	private SAMFileHeader fhead;
-	private CoordinateSpace refSpace;
 	private String fname;
 	private BEDFileIO io;
-	private AnnotationCollection<Gene> features;
+	private AnnotationCollection<BEDFileRecord> features;
 	
 	@Before
 	public void setUp() throws IOException
 	{
 		this.bam = new BAMSingleReadCollection(new File("/storage/shared/CoreTestData/chr19.clean.sorted.bam"));
-		this.fhead = bam.getFileHeader(); 
-		this.refSpace = new CoordinateSpace(fhead);  
 		this.fname = "/storage/shared/CoreTestData/RefSeqStrandTest.bed";
 		this.io =  new BEDFileIO("/storage/shared/CoreTestData/refspace.txt"); 
 		this.features = io.loadFromFile(fname);
@@ -90,7 +82,7 @@ public class BAMSingleReadTest {
 	//@Test
 	public void IteratorStrandMatchingTest() throws IOException{
 		//System.out.println("\n\nCcdc87 Mapped Reads:");
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -106,7 +98,7 @@ public class BAMSingleReadTest {
 		CloseableIterator<SAMFragment> f_iter = bam.sortedIterator(a, false);
 		while(f_iter.hasNext())
 		{
-			SAMFragment f = f_iter.next();
+			f_iter.next();
 			count++;
 		}
 		
@@ -138,7 +130,7 @@ public class BAMSingleReadTest {
 		CloseableIterator<SAMFragment> f_iter2 = bam.sortedIterator(a2, false);
 		while(f_iter2.hasNext())
 		{
-			SAMFragment f = f_iter2.next();
+			f_iter2.next();
 			count++;
 		}
 		

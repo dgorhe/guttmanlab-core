@@ -2,25 +2,23 @@ package guttmanlab.core.test;
 
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.DerivedAnnotation;
-import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.SAMFragment;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BEDFileRecord;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.BAMSingleReadCollection;
 import guttmanlab.core.coordinatespace.CoordinateSpace;
-import junit.framework.TestCase;
+import guttmanlab.core.coordinatespace.GenomeSize;
+
 import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.util.CloseableIterator;
@@ -35,7 +33,7 @@ public class GetWindowsTest {
 	private CoordinateSpace refSpace;
 	private String fname;
 	private BEDFileIO io;
-	private AnnotationCollection<Gene> features;	
+	private AnnotationCollection<BEDFileRecord> features;	
 	@Before
 	public void setUp() throws IOException
 	{
@@ -43,7 +41,7 @@ public class GetWindowsTest {
 		this.fhead = bam.getFileHeader(); 
 		this.refSpace = new CoordinateSpace(fhead);  
 		this.fname = "/storage/shared/CoreTestData/RefSeq.bed";  
-		this.io =  new BEDFileIO("/storage/shared/CoreTestData/refspace.txt"); //use existing coordinateSpace?
+		this.io =  new BEDFileIO(new CoordinateSpace(GenomeSize.MM9));
 		this.features = io.loadFromFile(fname);
 	}
 	//test
@@ -51,7 +49,7 @@ public class GetWindowsTest {
 	//Test a single exon positive gene with only three reads
 	@Test //Pass
 	public void Ccdc87GetWindowReadCounts() throws IOException{
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 		Map<Integer,Integer> map1 = new HashMap<Integer,Integer>();
 		
 		//expect 164 windows w/1 read, 188 with 2, and 12 with 3.
@@ -95,7 +93,7 @@ public class GetWindowsTest {
 	//Test a single exon negative gene 
 	@Test //Pass
 	public void Neat1GetWindowReadCount() throws IOException{
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 		Map<Integer,Integer> map1 = new HashMap<Integer,Integer>();
 		Annotation a = null;
 		while(iter.hasNext())
@@ -132,7 +130,7 @@ public class GetWindowsTest {
 	@Test
 	//Verifies the correct reads are returned for CCdc87, a multi exon negative strand gene.
 	public void Neat1ConvertCoordinatesGetWindows() throws IOException{
-		CloseableIterator<Gene> iter = features.sortedIterator();
+		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 		Map<Integer,Integer> map1 = new HashMap<Integer,Integer>();
 		Annotation a = null;
 		while(iter.hasNext()) 
@@ -192,7 +190,7 @@ public class GetWindowsTest {
 		int count = 0;
 		while(windows.hasNext())
 		{
-			PopulatedWindow<SAMFragment> win = windows.next();
+			windows.next();
 			count++;
 		}
 		windows.close();

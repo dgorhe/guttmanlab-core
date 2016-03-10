@@ -20,6 +20,7 @@ import net.sf.samtools.SAMRecord;
 public abstract class AbstractAnnotation implements Annotation {
 	
 	private static Logger logger = Logger.getLogger(AbstractAnnotation.class.getName());
+	
 	/**
 	 * Gets the blocks of this annotation as a collection
 	 * @return The set of blocks
@@ -55,6 +56,24 @@ public abstract class AbstractAnnotation implements Annotation {
 			endpoints[idx++] = block.getReferenceEndPosition();
 		}
 		return endpoints;
+	}
+
+	@Override
+	public Annotation merge(Annotation other) {
+		Strand consensusStrand = Annotation.Strand.consensusStrand(getOrientation(), other.getOrientation());
+		if(consensusStrand.equals(Strand.INVALID)) {
+			return null;
+		}
+		BlockedAnnotation rtrn=new BlockedAnnotation();
+		Iterator<SingleInterval> thisBlocks=getBlocks();
+		while(thisBlocks.hasNext()) {
+			rtrn.addBlocks(thisBlocks.next());
+		}
+		Iterator<SingleInterval> otherBlocks=other.getBlocks();
+		while(otherBlocks.hasNext()) {
+			rtrn.addBlocks(otherBlocks.next());
+		}
+		return rtrn;
 	}
 	
 	/**

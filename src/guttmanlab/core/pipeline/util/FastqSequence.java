@@ -14,6 +14,7 @@ public class FastqSequence {
 		this.sequence=sequence;
 		this.quality=quality;
 		this.name=name;
+		removeAtSymbolFromName();
 		this.description=description;
 	}
 	
@@ -40,7 +41,7 @@ public class FastqSequence {
 		bw.newLine();
 	}
 	
-	public void removeAtSymbolFromName() {
+	private void removeAtSymbolFromName() {
 		if(name.charAt(0) == '@') {
 			name = name.substring(1);
 		}
