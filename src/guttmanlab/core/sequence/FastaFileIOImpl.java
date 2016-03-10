@@ -1,8 +1,10 @@
 package guttmanlab.core.sequence;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,7 +79,46 @@ public class FastaFileIOImpl implements FastaFileIO {
 
 	@Override
 	public void writeToFile(Collection<Sequence> seqs, String fileName, int basesPerLine) {
-		throw new UnsupportedOperationException();
+		BufferedWriter bw;
+		try {
+			bw = new BufferedWriter(new FileWriter(fileName));
+			for(Sequence seq : seqs) {
+				write(seq, bw, basesPerLine);
+			}
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
+	
+	/**
+	 * Write one sequence to an output stream
+	 * @param seq Sequence
+	 * @param bw Buffered writer
+	 * @param lineLength Bases per line
+	 * @throws IOException
+	 */
+	public static void write(Sequence seq, BufferedWriter bw, int lineLength) throws IOException {
+		
+		StringBuilder sequenceBuilder = new StringBuilder(seq.getSequenceBases());
+		
+		if(seq == null || sequenceBuilder.length() == 0) {
+			return;
+		}
+		if(sequenceBuilder.length() == 0) {
+			return;
+		}
+
+		int currentIndex = 0;
+		bw.write(">" + seq.getName());
+		bw.newLine();
+		while(currentIndex < sequenceBuilder.length()) {
+			int toWrite = Math.min(lineLength, sequenceBuilder.length() - currentIndex) - 1;
+			bw.write(sequenceBuilder.substring(currentIndex, currentIndex + toWrite + 1));
+			bw.newLine();
+			currentIndex = currentIndex + toWrite + 1;
+		}
 	}
 
 }
