@@ -1,8 +1,5 @@
 package guttmanlab.core.alignment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import jaligner.Sequence;
 import jaligner.SmithWatermanGotoh;
 import jaligner.matrix.Matrix;
@@ -120,38 +117,6 @@ public class SmithWatermanAlignment {
 		}
 		return align.getStart1();
 	}
-	
-	/**
-	 * Whether there is a full length ungapped match of sequence 2 to sequence 1, starting at specified position of sequence 1, allowing mismatches
-	 * Uses default match and mismatch scores
-	 * @param seq1 Sequence 1
-	 * @param seq2 Sequence 2
-	 * @param seq1start Required start position of match on sequence 1
-	 * @return Whether the best ungapped alignment is full length and has at most the max number of mismatches
-	 */
-	public static boolean containsFullLengthUngappedMatch(String seq1, String seq2, int seq1start, int maxMismatches) {
-		return containsFullLengthUngappedMatch(seq1, seq2, seq1start, DEFAULT_MATCH_SCORE, DEFAULT_MISMATCH_SCORE, maxMismatches);
-	}
-
-	/**
-	 * Whether there is a full length ungapped match of sequence 2 to sequence 1, starting at specified position of sequence 1, allowing mismatches
-	 * @param seq1 Sequence 1
-	 * @param seq2 Sequence 2
-	 * @param seq1start Required start position of match on sequence 1
-	 * @param matchScore Match score
-	 * @param mismatchScore Mismatch score
-	 * @param maxMismatches Max allowable number of mismatches
-	 * @return Whether the best ungapped alignment is full length and has at most the max number of mismatches
-	 */
-	public static boolean containsFullLengthUngappedMatch(String seq1, String seq2, int seq1start, float matchScore, float mismatchScore, int maxMismatches) {
-		int seq1end = seq1start + seq2.length();
-		if(seq1end > seq1.length()) {
-			throw new IllegalArgumentException("Sequence is too short (" + seq1.length() + ") for a match of length " + seq2.length() + " starting at position " + seq1start + ".");
-		}
-		String seq1substring = seq1.substring(seq1start, seq1end);
-		return containsFullLengthUngappedMatch(seq1substring, seq2, matchScore, mismatchScore, maxMismatches);
-	}
-
 	
 	/**
 	 * Whether there is a full length ungapped match of the shorter sequence to the longer sequence, allowing mismatches

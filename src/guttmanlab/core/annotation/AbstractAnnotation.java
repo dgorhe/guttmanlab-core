@@ -57,7 +57,7 @@ public abstract class AbstractAnnotation implements Annotation {
 		}
 		return endpoints;
 	}
-	
+
 	/**
 	 * Merges this annotation with another. The type of merging is determined by the
 	 * second parameter, op.
