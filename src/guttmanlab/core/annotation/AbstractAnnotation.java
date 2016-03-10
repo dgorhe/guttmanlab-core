@@ -20,7 +20,6 @@ import net.sf.samtools.SAMRecord;
 public abstract class AbstractAnnotation implements Annotation {
 	
 	private static Logger logger = Logger.getLogger(AbstractAnnotation.class.getName());
-	
 	/**
 	 * Gets the blocks of this annotation as a collection
 	 * @return The set of blocks
