@@ -14,6 +14,7 @@ import java.util.TreeSet;
 /**
  * @author prussell
  * Full-featured command line parser
+ * This class is designed to be mutable!
  */
 public final class CommandLineParser {
 
