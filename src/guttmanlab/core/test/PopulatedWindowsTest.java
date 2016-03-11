@@ -3,7 +3,6 @@ package guttmanlab.core.test;
 import static org.junit.Assert.*;
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.BEDFileRecord;
-import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
