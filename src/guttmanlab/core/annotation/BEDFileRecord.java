@@ -6,53 +6,69 @@ import java.util.Iterator;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 
 /**
- * The BEDFileRecord class represents a feature given in a line of a BED file. BED file records
- * have three required fields (chromosome, start position, end position) and nine additional
- * optional fields.
- *
+ * The {@code BEDFileRecord} class represents a feature given in a line of a BED file. Lines
+ * from a BED file have three required fields (chromosome, start position, end position) and
+ * nine additional optional fields. A {@code BEDFileRecord} object has values for all twelve
+ * fields (sensible defaults for the nine optional fields, if they aren't provided).
  */
-public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRecord {
+public class BEDFileRecord extends Gene implements AnnotationFileRecord {
 
 	private final double score;
 	private final int thickStart;
 	private final int thickEnd;
 	private final Color color;
-	private final Annotation annot;
 
 	private final static double DEFAULT_SCORE = 0;
 	private final static Color DEFAULT_COLOR = Color.BLACK;
 	private static final int MAX_FIELDS = 12;
 	
 	/**
-	 * Constructs a BED record from a given annotation. The score and color fields will be set to their 
-	 * respective default values. The thickStart and thickEnd fields will both default to the start 
-	 * coordinate of the annotation. This constructor makes a copy of the annotation.
-	 * @param annot the annotation to make a BED record of
+	 * Constructs a BED record from a given {@code Annotation}. The score field will be set to zero, and
+	 * the color field will be set to black. The thickStart and thickEnd fields will both default
+	 * to the start coordinate of the annotation so that there is no thick region.
+	 * @param annot is the annotation to base this BED record on
 	 */
 	public BEDFileRecord(Annotation annot) {
-		this.annot = new BlockedAnnotation(annot);
+		super(annot);
 		thickStart = annot.getReferenceStartPosition();
 		thickEnd = thickStart;
 		score = DEFAULT_SCORE;
 		color = DEFAULT_COLOR;
 	}
 	
+	/**
+	 * Constructs a BED record from a given {@code Gene}. The score field will be set to zero, and
+	 * the color field will be set to black. The thickStart and thickEnd fields will be set to the
+	 * start and end coordinate of the coding region. If there is no coding region, they will
+	 * instead be set to the start coordinate of the annotation so that there is no thick region.
+	 * @param gene
+	 */
+	public BEDFileRecord(Gene gene) {
+		super(gene);
+		score = DEFAULT_SCORE;
+		color = DEFAULT_COLOR;
+		Annotation cds = gene.getCodingRegion();
+		if (cds == null) {
+			cdsStartPos = -1;
+			cdsEndPos = -1;
+			thickStart = gene.getReferenceStartPosition();
+			thickEnd = gene.getReferenceStartPosition();
+		} else {
+			cdsStartPos = cds.getReferenceStartPosition();
+			cdsEndPos = cds.getReferenceEndPosition();
+			thickStart = cdsStartPos;
+			thickEnd = cdsEndPos;
+		}
+	}
+	
 	private BEDFileRecord(BEDBuilder builder) {
-		annot = builder.annot;
+		super(builder.annot);
 		score = builder.score;
 		thickStart = builder.thickStart;
 		thickEnd = builder.thickEnd;
+		cdsStartPos = thickStart == thickEnd ? -1 : thickStart;
+		cdsEndPos = thickStart == thickEnd ? -1 : thickEnd;
 		color = builder.color;
-	}
-
-	@Override
-	public String getReferenceName() {
-		return annot.getReferenceName();
-	}
-
-	@Override
-	public String getName() {
-		return annot.getName();
 	}
 	
 	/**
@@ -60,16 +76,6 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 	 */
 	public double score() {
 		return score;
-	}
-
-	@Override
-	public Strand getOrientation() {
-		return annot.getOrientation();
-	}
-	
-	@Override
-	public void setOrientation(Strand orientation) {
-		annot.setOrientation(orientation);
 	}
 	
 	public int thickStart() {
@@ -87,31 +93,6 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 	public Color color() {
 		return color;
 	}
-
-	@Override
-	public int getReferenceStartPosition() {
-		return annot.getReferenceStartPosition();
-	}
-
-	@Override
-	public int getReferenceEndPosition() {
-		return annot.getReferenceEndPosition();
-	}
-
-	@Override
-	public int getNumberOfBlocks() {
-		return annot.getNumberOfBlocks();
-	}
-
-	@Override
-	public Iterator<SingleInterval> getBlocks() {
-		return annot.getBlocks();
-	}
-	
-	@Override
-	public int size() {
-		return annot.size();
-	}
 	
 	/**
 	 * Converts this BEDFileRecord to a formatted (i.e., tab-delimited) string suitable for outputting
@@ -127,14 +108,14 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 
 		// Required fields
 		StringBuilder sb = new StringBuilder();
-		sb.append(annot.getReferenceName() + "\t" + annot.getReferenceStartPosition() + "\t" + annot.getReferenceEndPosition());
+		sb.append(getReferenceName() + "\t" + getReferenceStartPosition() + "\t" + getReferenceEndPosition());
 		int currentFieldNum = 3;
 		if (currentFieldNum >= numFields) {
 			return sb.toString();
 		}
 		
 		// Name
-		String name = annot.getName();
+		String name = getName();
 		if (name.isEmpty()) {
 			name = ".";
 		}
@@ -151,7 +132,7 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 			return sb.toString();
 		}
 		
-		Strand strand = annot.getOrientation();
+		Strand strand = getOrientation();
 		if (strand != Strand.POSITIVE && strand != Strand.NEGATIVE) {
 			sb.append("\t" + ".");
 		} else {
@@ -174,17 +155,17 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 			return sb.toString();
 		}
 		  
-		sb.append("\t" + annot.getNumberOfBlocks() + "\t");
-		Iterator<SingleInterval> blocks = annot.getBlocks();
+		sb.append("\t" + getNumberOfBlocks() + "\t");
+		Iterator<SingleInterval> blocks = getBlocks();
 		while (blocks.hasNext()) {
 			Annotation block = blocks.next();
 			sb.append(block.size() + ","); // trailing comma after last block is OK
 		}
 		sb.append("\t");
-		blocks = annot.getBlocks();
+		blocks = getBlocks();
 		while (blocks.hasNext()) {
 			Annotation block = blocks.next();
-			sb.append((block.getReferenceStartPosition() - annot.getReferenceStartPosition()) + ","); // trailing comma after last is OK
+			sb.append((block.getReferenceStartPosition() - getReferenceStartPosition()) + ","); // trailing comma after last is OK
 		}
 		return sb.toString();
 	}		
@@ -204,7 +185,7 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 	 * Parses a String into a BEDFileRecord. The String should be whitespace-delimited and follow the same
 	 * format as a single line from a BED file. Any trailing whitespace, including newline, is removed
 	 * during parsing.
-	 * @param s the String to parse to a BEDFileRecord
+	 * @param s is the String to parse to a BEDFileRecord
 	 * @return the BEDFileRecord which corresponds to the input String
 	 * @throws IllegalArgumentException if the input has an invalid number of fields after splitting on tab
 	 * @throws IllegalArgumentException if there is disagreement between the blockCount field and the numbers
@@ -320,15 +301,18 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 	
 	/**
 	 *  Returns a String representation of this BEDFileRecord by calling toString() on its component
-	 *  Annotation. If you need a formatted line of text for a BED file, see {@link #toFormattedString() toFormattedString};
+	 *  Annotation. If you need a formatted line of text for a BED file, see {@link #toFormattedString() toFormattedString()};
 	 */
 	@Override
 	public String toString() {
-		return annot.toString();
+		// Method only overridden to add Javadoc. Any better ideas?
+		return toString();
 	}
 	
 	/**
-	 * A builder class for creating BEDFileRecords. 
+	 * A builder class for creating {@code BEDFileRecord} objects. Below is an example of how to use this class.
+	 * <p>
+	 * {@code BEDFileRecord b = new BEDBuilder("chr1", 100, 300).score(20).strand(Strand.POSITIVE).color(Color.RED).build();}
 	 */
 	public static class BEDBuilder {
 		// Required fields
@@ -341,19 +325,45 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 		private Color color;
 		
 		/**
-		 * Constructs a BEDBuilder based on an annotation (the relevant characteristics being the reference coordinates, the blocks,
-		 * the orientation, and the name). The thickStart, thickEnd, score and color fields are initialized with default values. This\
-		 * constructor makes a copy of the annotation passed to it.
+		 * Constructs a BEDBuilder based on an {@code Annotation} (the copied characteristics being the reference
+		 * coordinates, the blocks, the orientation, and the name). The thickStart and thickEnd fields are set to
+		 * the start coordinate of the annotation. The score field is set to zero, and the color field is set to black.
+		 * This constructor makes a copy of the annotation passed to it.
 		 * @param annot is the annotation to copy
 		 */
-		public BEDBuilder(Annotation annot) {
+		public BEDBuilder(final Annotation annot) {
 			this.annot = new BlockedAnnotation(annot);
 			thickStart = this.annot.getReferenceStartPosition();
 			thickEnd = this.annot.getReferenceStartPosition();
 			score = DEFAULT_SCORE;
 			color = DEFAULT_COLOR;
 		}
-		
+
+		/**
+		 * Constructs a BEDBuilder based on a {@code Gene}. The thickStart and thickEnd fields are set to
+		 * the corresponding coordinates of the gene's coding region, if it is specified. Otherwise, they
+		 * are set to the start coordinate of the gene. The score field is set to zero, and the color field 
+		 * is set to black. This constructor makes a copy of the gene passed to it.
+		 * @param gene is the annotation to copy
+		 */
+		public BEDBuilder(final Gene gene) {
+			annot = new BlockedAnnotation(gene);
+			Annotation cds = gene.getCodingRegion();
+			thickStart = cds == null ? gene.getReferenceStartPosition() : cds.getReferenceStartPosition();
+			thickEnd = cds == null ? gene.getReferenceStartPosition() : cds.getReferenceEndPosition();
+			score = DEFAULT_SCORE;
+			color = DEFAULT_COLOR;
+		}
+
+		/**
+		 * Constructs a BEDBuilder based on a contiguous annotation defined by the parameters. The thickStart
+		 * and thickEnd fields are set to the start coordinate of the annotation. The score field is set to
+		 * zero, and the color field is set to black. This constructor is identical to
+		 * {@code BEDBuilder(new SingleInterval(chrom, chromStart, chromEnd))}.
+		 * @param chrom is the reference name of the annotation
+		 * @param chromStart is the start coordinate of the annotation
+		 * @param chromEnd is the end coordinate of the annotation
+		 */		
 		public BEDBuilder(final String chrom, final int chromStart, final int chromEnd) {
 			annot = new SingleInterval(chrom, chromStart, chromEnd);
 			thickStart = annot.getReferenceStartPosition();
@@ -396,6 +406,9 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 			return this;
 		}
 		
+		/**
+		 * @return a new {@code BEDFileRecord} object with values matching those of this builder
+		 */
 		public BEDFileRecord build() {
 			if (thickStart < annot.getReferenceStartPosition()) {
 				throw new IllegalArgumentException("Attempted to create BED record with thickStart " + thickStart + " less than chromStart " + annot.getReferenceStartPosition() + ".");
