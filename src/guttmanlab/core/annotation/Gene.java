@@ -11,9 +11,9 @@ import java.util.Iterator;
  */
 public class Gene extends BlockedAnnotation{
 
-	private static final int NO_CDS=-1;
-	private int cdsStartPos=NO_CDS;
-	private int cdsEndPos=NO_CDS;
+	private static final int NO_CDS = -1;
+	protected int cdsStartPos = NO_CDS;
+	protected int cdsEndPos = NO_CDS;
 	
 	public Gene(Collection<Annotation> blocks, int cdsStartPos, int cdsEndPos, String name) {
 		super(blocks, name);
