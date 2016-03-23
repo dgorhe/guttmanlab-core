@@ -44,6 +44,19 @@ public interface AnnotationCollection<T extends Annotation> {
 	public CloseableIterator<T> sortedIterator();
 	
 	/**
+	 * A sorted iterator that collapses annotations with the same name
+	 * Returns exactly one representative for each set of annotations sharing all attributes except name
+	 * Any representative may be returned
+	 * Never returns multiple annotations that differ by name only
+	 * @return A sorted iterator over all the annotations in this collection, never returning
+	 * multiple annotations that differ by name only
+	 */
+	public default CloseableIterator<T> sortedIteratorIgnoreName() {
+		throw new UnsupportedOperationException();
+	}
+	
+	
+	/**
 	 * A sorted iterator over the set of annotations in this collection that overlap the region (must be sorted)
 	 * @param region Region to check for overlappers
 	 * @param fullyContained Whether the overlappers must be fully contained in the region

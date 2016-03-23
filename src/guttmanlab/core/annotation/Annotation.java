@@ -617,4 +617,14 @@ public interface Annotation extends Comparable<Annotation> {
 		
 		return rtrn;
 	}
+	
+	/**
+	 * An equals method that ignores the feature name
+	 * @param other Other annotation
+	 * @return True if the annotations are equal except for the name
+	 */
+	public default boolean equalsIgnoreName(Annotation other) {
+		return compareTo(other) == 0;
+	}
+	
 }

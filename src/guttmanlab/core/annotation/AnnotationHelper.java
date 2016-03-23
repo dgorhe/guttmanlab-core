@@ -84,7 +84,7 @@ class AnnotationHelper {
 		if(aName != null && bName != null) {
 			if(!a.getName().equals(b.getName())) return false;
 		}
-		return a.compareTo(b) == 0;
+		return a.equalsIgnoreName(b);
 	}
 
 	/**
