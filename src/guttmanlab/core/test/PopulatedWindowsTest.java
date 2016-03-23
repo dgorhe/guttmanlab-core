@@ -33,9 +33,9 @@ public class PopulatedWindowsTest {
 	@Before
 	public void setUp() throws IOException
 	{
-		data = new BAMPairedFragmentCollection(new File("/Users/prussell/Documents/lncRNA/Peak_caller_testing/input.bam"));
-		fname = "/Users/prussell/Documents/lncRNA/Peak_caller_testing/genes.bed";  
-		io =  new BEDFileIO("/Users/prussell/Documents/lncRNA/Peak_caller_testing/sizes");
+		data = new BAMPairedFragmentCollection(new File("/storage/shared/CoreTestData/input.bam"));
+		fname = "/storage/shared/CoreTestData/genes.bed";  
+		io =  new BEDFileIO("/storage/shared/CoreTestData/sizes");
 		features = io.loadFromFile(fname);
 		CloseableIterator<BEDFileRecord> iter = features.sortedIterator();
 		while(iter.hasNext()) {
