@@ -14,7 +14,7 @@ import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.TextCigarCodec;
 
-public class SAMFragment extends AbstractNamedAnnotation implements MappedFragment{
+public class SAMFragment implements MappedFragment{
 
 	private SAMRecord record;
 	private boolean strandIsFirstOfPair; 
@@ -241,6 +241,29 @@ public class SAMFragment extends AbstractNamedAnnotation implements MappedFragme
 	}
 	
 	//TODO For intersect, merge, and convert --> override and add all ReadFlags to the new object
+
+	@Override
+	public String toString(){
+		return AnnotationHelper.toString(this);
+	}
+	
+	
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof Annotation)) {
+			return false;
+		}
+		return AnnotationHelper.equals(this, (Annotation)other);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return AnnotationHelper.hashCode(this);
+	}
+
 
 	
 }

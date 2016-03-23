@@ -201,22 +201,29 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 		return getIntAttribute("mapq");
 	}
 	
-	public boolean equals(Object o) {
-		if(o instanceof Annotation) {
-			String otherName = ((Annotation)o).getName();
-			if(!otherName.equals(getName())) {
-				return false;
-			}
-			return equals(o);
-		}
-		return false;
+	@Override
+	public String toString(){
+		return toBED(0,0,0);
 	}
 	
-	public int hashCode() {
-		HashCodeBuilder h = hashCodeBuilder();
-		h.append(getName());
-		return h.toHashCode();
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof Annotation)) {
+			return false;
+		}
+		Annotation b = (Annotation)other;
+		if(!getName().equals(b.getName())) return false;
+		return compareTo(b) == 0;
 	}
+	
+	@Override
+	public int hashCode()
+	{
+		return new HashCodeBuilder(31,37).append(getName()).append(getReferenceName()).append(getReferenceStartPosition())
+				.append(getReferenceEndPosition()).append(getOrientation()).append(getNumberOfBlocks()).toHashCode();
+	}
+
 
 	
 }

@@ -11,7 +11,7 @@ import java.util.Iterator;
  * This is the basis for all features.
  * Interval coordinates are zero-based, left-closed and right-open.
  */
-public class SingleInterval extends AbstractAnnotation{
+public class SingleInterval implements Annotation{
 
 	private String referenceName;
 	private int startPos;
@@ -64,6 +64,16 @@ public class SingleInterval extends AbstractAnnotation{
 	 */
 	public SingleInterval(SingleInterval a) {
 		this(a.getReferenceName(), a.getReferenceStartPosition(), a.getReferenceEndPosition(), a.getOrientation(), a.getName());
+	}
+	
+	/**
+	 * Copy and change name
+	 * @param a Single interval to copy
+	 * @param name New name
+	 */
+	public SingleInterval(SingleInterval a, String name) {
+		this(a);
+		this.featureName = name;
 	}
 
 	@Override
@@ -202,5 +212,28 @@ public class SingleInterval extends AbstractAnnotation{
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
+	public String toString(){
+		return AnnotationHelper.toString(this);
+	}
+	
+	
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof Annotation)) {
+			return false;
+		}
+		return AnnotationHelper.equals(this, (Annotation)other);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return AnnotationHelper.hashCode(this);
+	}
+
+
 	
 }

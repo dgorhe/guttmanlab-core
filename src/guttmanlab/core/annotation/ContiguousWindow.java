@@ -49,4 +49,27 @@ public class ContiguousWindow<T extends Annotation> extends SingleInterval imple
 		return this.annotations.iterator();
 	}
 
+	@Override
+	public String toString(){
+		return AnnotationHelper.toString(this);
+	}
+	
+	
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof Annotation)) {
+			return false;
+		}
+		return AnnotationHelper.equals(this, (Annotation)other);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return AnnotationHelper.hashCode(this);
+	}
+
+
 }

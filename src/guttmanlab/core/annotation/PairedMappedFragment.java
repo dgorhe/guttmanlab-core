@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class PairedMappedFragment<T extends Annotation> extends AbstractNamedAnnotation implements MappedFragment{
+public class PairedMappedFragment<T extends Annotation> implements MappedFragment{
 
 	private Pair<T> pair;
 	
@@ -146,5 +146,27 @@ public class PairedMappedFragment<T extends Annotation> extends AbstractNamedAnn
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public String toString(){
+		return AnnotationHelper.toString(this);
+	}
 	
+	
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof Annotation)) {
+			return false;
+		}
+		return AnnotationHelper.equals(this, (Annotation)other);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return AnnotationHelper.hashCode(this);
+	}
+
+
 }

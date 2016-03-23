@@ -9,7 +9,7 @@ import java.util.Iterator;
 
 
 
-public class BlockedAnnotation extends AbstractAnnotation {
+public class BlockedAnnotation implements Annotation {
 
 	private IntervalTree<SingleInterval> blocks;
 	private String referenceName;
@@ -107,7 +107,7 @@ public class BlockedAnnotation extends AbstractAnnotation {
 			while (iter.hasNext()) {
 				SingleInterval e = iter.next();
 				blocks.remove(e.getReferenceStartPosition(), e.getReferenceEndPosition()); // Pam added on 12/24/14
-				merged = merge(merged, e);
+				merged = AnnotationHelper.merge(merged, e);
 				size -= e.size();
 			}
 		}
@@ -232,4 +232,28 @@ public class BlockedAnnotation extends AbstractAnnotation {
 		return rtrn;
 		
 	}
+	
+	@Override
+	public String toString(){
+		return AnnotationHelper.toString(this);
+	}
+	
+	
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof Annotation)) {
+			return false;
+		}
+		return AnnotationHelper.equals(this, (Annotation)other);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return AnnotationHelper.hashCode(this);
+	}
+
+	
 }
