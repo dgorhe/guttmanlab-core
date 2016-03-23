@@ -52,11 +52,11 @@ public class AnnotationMergeTest {
 		cmpXor.addBlocks(new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
 		cmpXor.addBlocks(new SingleInterval("chr1", 300, 400, Strand.POSITIVE));
 
-		assertEquals("Intersection between two single intervals failed.", intersection, new SingleInterval("chr1", 200, 300, Strand.POSITIVE));
+		assertEquals("Intersection between two single intervals failed.", intersection, new SingleInterval("chr1", 200, 300, Strand.POSITIVE, intersection.getName()));
 		assertEquals("Intersection not reflexive", intersection, single2.intersect(single1));
-		assertEquals("Union between two single intervals failed.", union, new SingleInterval("chr1", 100, 400, Strand.POSITIVE));
+		assertEquals("Union between two single intervals failed.", union, new SingleInterval("chr1", 100, 400, Strand.POSITIVE, union.getName()));
 		assertEquals("Union not reflexive", union, single2.union(single1));
-		assertEquals("Difference between two single intervals failed.", diff, new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
+		assertEquals("Difference between two single intervals failed.", diff, new SingleInterval("chr1", 100, 200, Strand.POSITIVE, diff.getName()));
 		assertEquals("Symmetric difference between two single intervals failed.", xor, cmpXor);
 		assertEquals("Symmetric difference not reflexive", xor, cmpXor);
 	}
@@ -79,7 +79,7 @@ public class AnnotationMergeTest {
 		assertEquals("Union is not reflexive.", union, blocked2.union(blocked1));
 		
 		Annotation diff12 = blocked1.minus(blocked2);
-		assertEquals("Difference between two blocked annotations failed (1).", diff12, new SingleInterval("chr1", 150, 200, Strand.POSITIVE));
+		assertEquals("Difference between two blocked annotations failed (1).", diff12, new SingleInterval("chr1", 150, 200, Strand.POSITIVE, diff12.getName()));
 		
 		Annotation diff21 = blocked2.minus(blocked1);
 		BlockedAnnotation cmpDiff21 = new BlockedAnnotation("chr1");

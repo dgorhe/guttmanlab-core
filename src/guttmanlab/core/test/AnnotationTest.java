@@ -75,9 +75,9 @@ public class AnnotationTest {
 		Annotation blocked3 = blocked.trim(330, 550);  // between exons
 		
 		Iterator<SingleInterval> iter = blocked1.getBlocks();
-		SingleInterval trimmedBlock1 = iter.next();
-		SingleInterval trimmedBlock2 = iter.next();
-		SingleInterval trimmedBlock3 = iter.next();
+		SingleInterval trimmedBlock1 = new SingleInterval(iter.next(), block1.getName());
+		SingleInterval trimmedBlock2 = new SingleInterval(iter.next(), block2.getName());
+		SingleInterval trimmedBlock3 = new SingleInterval(iter.next(), block3.getName());
 		
 		assertEquals("Trimming should not have removed any blocks.", blocked1.getNumberOfBlocks(), 3);
 		assertEquals("Trimming should not affect first block.", block1, trimmedBlock1);
@@ -85,9 +85,9 @@ public class AnnotationTest {
 		assertEquals("Trimming should not affect last block.", block3, trimmedBlock3);
 		
 		iter = blocked2.getBlocks();
-		trimmedBlock1 = iter.next();
-		trimmedBlock2 = iter.next();
-		trimmedBlock3 = iter.next();
+		trimmedBlock1 = new SingleInterval(iter.next(), block1.getName());
+		trimmedBlock2 = new SingleInterval(iter.next(), block2.getName());
+		trimmedBlock3 = new SingleInterval(iter.next(), block3.getName());
 		
 		assertEquals("Trimming should not have removed any blocks.", blocked2.getNumberOfBlocks(), 3);
 		assertEquals("First block is trimmed.", new SingleInterval("a1", 150, 300, Strand.POSITIVE), trimmedBlock1);
@@ -95,7 +95,7 @@ public class AnnotationTest {
 		assertEquals("Last block is trimmed.", new SingleInterval("a1", 600, 650, Strand.POSITIVE), trimmedBlock3);
 		
 		iter = blocked3.getBlocks();
-		trimmedBlock2 = iter.next();
+		trimmedBlock2 = new SingleInterval(iter.next(), block2.getName());
 		
 		assertEquals("Trimming should have removed the first and last block.", blocked3.getNumberOfBlocks(), 1);
 		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
@@ -114,9 +114,9 @@ public class AnnotationTest {
 		Annotation blocked3 = blocked.trim(330, 550);  // between exons
 		
 		Iterator<SingleInterval> iter = blocked1.getBlocks();
-		SingleInterval trimmedBlock1 = iter.next();
-		SingleInterval trimmedBlock2 = iter.next();
-		SingleInterval trimmedBlock3 = iter.next();
+		SingleInterval trimmedBlock1 = new SingleInterval(iter.next(), block1.getName());
+		SingleInterval trimmedBlock2 = new SingleInterval(iter.next(), block2.getName());
+		SingleInterval trimmedBlock3 = new SingleInterval(iter.next(), block3.getName());
 		
 		assertEquals("Trimming should not have removed any blocks.", blocked1.getNumberOfBlocks(), 3);
 		assertEquals("Trimming should not affect first block.", block1, trimmedBlock1);
@@ -124,9 +124,9 @@ public class AnnotationTest {
 		assertEquals("Trimming should not affect last block.", block3, trimmedBlock3);
 		
 		iter = blocked2.getBlocks();
-		trimmedBlock1 = iter.next();
-		trimmedBlock2 = iter.next();
-		trimmedBlock3 = iter.next();
+		trimmedBlock1 = new SingleInterval(iter.next(), block1.getName());
+		trimmedBlock2 = new SingleInterval(iter.next(), block2.getName());
+		trimmedBlock3 = new SingleInterval(iter.next(), block3.getName());
 		
 		assertEquals("Trimming should not have removed any blocks.", blocked2.getNumberOfBlocks(), 3);
 		assertEquals("First block is trimmed.", new SingleInterval("a1", 150, 300, Strand.NEGATIVE), trimmedBlock1);
@@ -134,7 +134,7 @@ public class AnnotationTest {
 		assertEquals("Last block is trimmed.", new SingleInterval("a1", 600, 650, Strand.NEGATIVE), trimmedBlock3);
 		
 		iter = blocked3.getBlocks();
-		trimmedBlock2 = iter.next();
+		trimmedBlock2 = new SingleInterval(iter.next(), block2.getName());
 		
 		assertEquals("Trimming should have removed the first and last block.", blocked3.getNumberOfBlocks(), 1);
 		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
