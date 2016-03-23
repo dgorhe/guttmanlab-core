@@ -272,9 +272,9 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 		
 		// Add orientation
 		if (numFields >= 6) {
-			if (!fields[5].equals("+") && !fields[5].equals("-") && !fields[5].equals(".")) {
+			if (!fields[5].equals("+") && !fields[5].equals("-") && !fields[5].equals(".") && !fields[5].equals("*")) {
 				throw new IllegalArgumentException("The strand field of the formatted BED string must either"
-						+ " be a '+', a '-', or a '.'");
+						+ " be '+', '-',  '.', or '*'");
 			}
 			Strand str = Strand.fromString(fields[5]);
 			bb.strand(str);
@@ -294,7 +294,7 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 		
 		// Add color.
 		if (numFields >= 9) {
-			if (fields[8].equals(".")) {
+			if (fields[8].equals(".") || fields[8].equals("0")) {
 				bb.color(DEFAULT_COLOR);
 			} else {
 				int[] colorVals = parseCommaSeparatedString(fields[8]);
