@@ -17,7 +17,7 @@ import java.util.TreeMap;
 import sun.nio.cs.ext.TIS_620;
 import net.sf.samtools.util.CloseableIterator;
 
-public class FeatureCollection<T extends BlockedAnnotation> extends AbstractAnnotationCollection<T> implements Collection<T> {
+public class FeatureCollection<T extends Annotation> extends AbstractAnnotationCollection<T> implements Collection<T> {
 
 	/**
 	 * The reference coordinate system that features are mapped to

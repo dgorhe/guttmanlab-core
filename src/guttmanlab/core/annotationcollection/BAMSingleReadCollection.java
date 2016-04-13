@@ -22,6 +22,7 @@ import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
 
 /**
@@ -173,6 +174,7 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		 * @param iter the SAMRecordIterator to wrap
 		 */
 		public WrappedIterator(SAMRecordIterator iter){
+			//iter.assertSorted(SortOrder.coordinate);
 			this.iter=iter;
 		}
 

@@ -605,9 +605,9 @@ public interface Annotation extends Comparable<Annotation> {
 			}
 			scan = Math.min(thisEndpoints[thisIdx], otherEndpoints[otherIdx]);
 		}
-		for (int i = 0; i < rtrnEndpoints.size(); i++) {
-			System.out.println(rtrnEndpoints.get(i));
-		}
+//		for (int i = 0; i < rtrnEndpoints.size(); i++) {
+//			System.out.println(rtrnEndpoints.get(i));
+//		}
 		// Construct the resulting annotation
 		BlockedAnnotation rtrn = new BlockedAnnotation(getReferenceName());
 		for (int i = 0; i < rtrnEndpoints.size(); i += 2) {

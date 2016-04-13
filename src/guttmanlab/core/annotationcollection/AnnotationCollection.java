@@ -52,7 +52,7 @@ public interface AnnotationCollection<T extends Annotation> {
 	 * multiple annotations that differ by name only
 	 */
 	public default CloseableIterator<T> sortedIteratorIgnoreName() {
-		throw new UnsupportedOperationException();
+		return NameIgnoringIterator.forAnnotations(this);
 	}
 	
 	
