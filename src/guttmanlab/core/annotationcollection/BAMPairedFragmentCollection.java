@@ -312,11 +312,12 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 					this.partials = new TreeMap<String, Pair<SAMFragment>>();
 				}
 	
+				boolean isMapped = !read.getSamRecord().getReadUnmappedFlag();
 				boolean isPaired = read.getSamRecord().getReadPairedFlag();
 				boolean mateMapped = !read.getSamRecord().getMateUnmappedFlag();
 				boolean onSameReference = rec.getReferenceName().equalsIgnoreCase(rec.getMateReferenceName());
 	
-				if (isPaired && mateMapped && onSameReference) {
+				if (isMapped && isPaired && mateMapped && onSameReference) {
 					Pair<SAMFragment> pair = partials.containsKey(read.getName())
 											 ? partials.remove(read.getName())       // Mate found in a Pair. Get it.
 											 : new Pair<SAMFragment>();              // Mate not seen. Make a new pair.
