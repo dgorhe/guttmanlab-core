@@ -22,6 +22,7 @@ import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
 
 /**
@@ -50,6 +51,13 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 	 */
 	public BAMSingleReadCollection(String bamFilePath) {
 		this(new File(bamFilePath));
+	}
+	
+	@Override 
+	public CloseableIterator<SAMFragment> sortedIteratorIgnoreName() {
+		throw new UnsupportedOperationException("This method can't work until sortedIterator() "
+				+ "on this class returns annotations that are sorted according to compareTo(). When that"
+				+ "is fixed, the default implementation in AnnotationCollection will work.");
 	}
 	
 	@Override
@@ -173,6 +181,7 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		 * @param iter the SAMRecordIterator to wrap
 		 */
 		public WrappedIterator(SAMRecordIterator iter){
+			//iter.assertSorted(SortOrder.coordinate);
 			this.iter=iter;
 		}
 

@@ -48,11 +48,13 @@ public interface AnnotationCollection<T extends Annotation> {
 	 * Returns exactly one representative for each set of annotations sharing all attributes except name
 	 * Any representative may be returned
 	 * Never returns multiple annotations that differ by name only
+	 * @param assertSorted Require the annotations returned by the iterator to be sorted according to 
+	 * the compareTo method in class T
 	 * @return A sorted iterator over all the annotations in this collection, never returning
 	 * multiple annotations that differ by name only
 	 */
 	public default CloseableIterator<T> sortedIteratorIgnoreName() {
-		throw new UnsupportedOperationException();
+		return NameIgnoringIterator.forAnnotations(this);
 	}
 	
 	

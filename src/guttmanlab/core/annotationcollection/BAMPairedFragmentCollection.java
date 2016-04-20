@@ -187,6 +187,15 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 		       : Pair.of(read2, read1);
 	}
 	
+	@Override 
+	public CloseableIterator<PairedMappedFragment<SAMFragment>> sortedIteratorIgnoreName() {
+		throw new UnsupportedOperationException("This method can't work until sortedIterator() "
+				+ "on this class returns annotations that are sorted according to compareTo(). When that"
+				+ "is fixed, the default implementation in AnnotationCollection will work.");
+	}
+	
+
+	
 	@Override
 	public CloseableIterator<PairedMappedFragment<SAMFragment>> sortedIterator() {
 		return new FilteredIterator<PairedMappedFragment<SAMFragment>>(new PairedIterator(reads.sortedIterator()), getFilters());
