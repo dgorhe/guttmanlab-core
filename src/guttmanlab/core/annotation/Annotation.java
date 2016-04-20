@@ -480,12 +480,7 @@ public interface Annotation extends Comparable<Annotation> {
 		return a;
 	}
 	
-	/**
-	 * 
-	 * @param other annotation to be compared with
-	 * @return 
-	 */
-	public default int compareTo(Annotation other) {
+	public default int compareToIgnoreName(Annotation other) {
 		int comp = getReferenceName().compareTo(other.getReferenceName());
 		if(comp!=0){return comp;}
 		
@@ -516,7 +511,31 @@ public interface Annotation extends Comparable<Annotation> {
 				if(comp!=0){return comp;}
 			}
 		}
+		
 		return 0;
+		
+	}
+	
+	/**
+	 * 
+	 * @param other annotation to be compared with
+	 * @return 
+	 */
+	public default int compareTo(Annotation other) {
+		
+		int compareIgnoreName = compareToIgnoreName(other);
+		if(compareIgnoreName != 0) return compareIgnoreName;
+		
+		// Compare annotation names
+		if(getName() != null) {
+			if(other.getName() != null) {
+				return getName().compareTo(other.getName());
+			}
+			return 1;
+		}
+		if(other.getName() != null) return -1;
+		return 0;
+		
 	}
 	
 	/**
@@ -624,7 +643,7 @@ public interface Annotation extends Comparable<Annotation> {
 	 * @return True if the annotations are equal except for the name
 	 */
 	public default boolean equalsIgnoreName(Annotation other) {
-		return compareTo(other) == 0;
+		return compareToIgnoreName(other) == 0;
 	}
 	
 }

@@ -27,7 +27,7 @@ public class NameIgnoringIterator<T extends Annotation> implements CloseableIter
 	}
 	
 	private void assertSorted(T first, T second) {
-		if(first.compareTo(second) > 0) {
+		if(first.compareToIgnoreName(second) > 0) {
 			throw new IllegalStateException("\nAnnotations are not in sorted order:\n" + first.toBED() + "\n" + second.toBED());
 		}
 	}

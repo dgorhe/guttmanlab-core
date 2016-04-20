@@ -53,6 +53,13 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		this(new File(bamFilePath));
 	}
 	
+	@Override 
+	public CloseableIterator<SAMFragment> sortedIteratorIgnoreName() {
+		throw new UnsupportedOperationException("This method can't work until sortedIterator() "
+				+ "on this class returns annotations that are sorted according to compareTo(). When that"
+				+ "is fixed, the default implementation in AnnotationCollection will work.");
+	}
+	
 	@Override
 	public CloseableIterator<SAMFragment> sortedIterator() {
 		return new FilteredIterator<SAMFragment>(new WrappedIterator(reader.iterator()), getFilters());
