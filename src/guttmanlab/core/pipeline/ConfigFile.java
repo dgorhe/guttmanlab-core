@@ -115,7 +115,7 @@ public class ConfigFile {
 			return null;
 		}
 		if(optionsFromFile.get(section).get(option).size() > 1) {
-			throw new IllegalArgumentException("Can't get single value for option " + option.getName() + ": option is specified more than once in config file.");
+			exitWithMessageAndHelpMenu("Can't get single value for option " + option.getName() + ": option is specified more than once in config file.");
 		}
 		return optionsFromFile.get(section).get(option).iterator().next();
 	}
@@ -132,7 +132,7 @@ public class ConfigFile {
 			return null;
 		}
 		if(value.getActualNumValues() != 2) {
-			throw new IllegalArgumentException("Can't get single value for option " + option.getName() + ": option must specify 2 fields including flag.");
+			exitWithMessageAndHelpMenu("Can't get single value for option " + option.getName() + ": option must specify 2 fields including flag.");
 		}
 		return value.asString(1);
 	}
@@ -146,10 +146,10 @@ public class ConfigFile {
 	public double getSingleValueDouble(ConfigFileSection section, ConfigFileOption option) {
 		ConfigFileOptionValue value = getSingleValue(section, option);
 		if(value == null) {
-			throw new IllegalArgumentException("File does not have option " + option.getName());
+			exitWithMessageAndHelpMenu("Section " + section.getName() + " does not have option " + option.getName());
 		}
 		if(value.getActualNumValues() != 2) {
-			throw new IllegalArgumentException("Can't get single value for option " + option.getName() + ": option must specify 2 fields including flag.");
+			exitWithMessageAndHelpMenu("Can't get single value for option " + option.getName() + ": option must specify 2 fields including flag.");
 		}
 		return value.asDouble(1);
 	}
@@ -163,10 +163,10 @@ public class ConfigFile {
 	public int getSingleValueInt(ConfigFileSection section, ConfigFileOption option) {
 		ConfigFileOptionValue value = getSingleValue(section, option);
 		if(value == null) {
-			throw new IllegalArgumentException("File does not have option " + option.getName());
+			exitWithMessageAndHelpMenu("Section " + section.getName() + " does not have option " + option.getName());
 		}
 		if(value.getActualNumValues() != 2) {
-			throw new IllegalArgumentException("Can't get single value for option " + option.getName() + ": option must specify 2 fields including flag.");
+			exitWithMessageAndHelpMenu("Can't get single value for option " + option.getName() + ": option must specify 2 fields including flag.");
 		}
 		return value.asInt(1);
 	}
@@ -178,7 +178,7 @@ public class ConfigFile {
 	 */
 	public List<OptionValuePair> getOrderedOptionsAndValues(ConfigFileSection section) {
 		if(!orderedOptionsBySection.containsKey(section)) {
-			throw new IllegalArgumentException("Section not found: " + section.getName());
+			exitWithMessageAndHelpMenu("Section not found: " + section.getName());
 		}
 		return orderedOptionsBySection.get(section);
 	}
@@ -401,6 +401,10 @@ public class ConfigFile {
 			for(ConfigFileOption option : section.getAllowableOptions()) {
 				for(Integer numVals : option.getAllowableNumbersOfValues()) {
 					String helpMenuLine = option.getName() + "\t";
+					if(option.getDescription() != null) {
+						helpMenuLine += option.getDescription() + "\n";
+						helpMenuLine += option.getName() + "\t";
+					}
 					for(int i = 2; i <= numVals.intValue(); i++) {
 						helpMenuLine += "<value" + Integer.valueOf(i-1).toString() + ">\t";
 					}
@@ -429,7 +433,7 @@ public class ConfigFile {
 	/**
 	 * Print help menu and exit
 	 */
-	public void exitWithHelpMenu() {
+	private void exitWithHelpMenu() {
 		
 		String message = getHelpMenu();
 		message += "\n\n";
@@ -443,7 +447,7 @@ public class ConfigFile {
 	/**
 	 * @param errorMessage Error message to print
 	 */
-	private void exitWithMessageAndHelpMenu(String errorMessage) {
+	protected void exitWithMessageAndHelpMenu(String errorMessage) {
 		
 		String message = getHelpMenu();
 		message += "\nInvalid config file:\n";

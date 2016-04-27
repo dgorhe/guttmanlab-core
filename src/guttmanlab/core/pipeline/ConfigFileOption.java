@@ -13,6 +13,7 @@ public class ConfigFileOption {
 	private TreeSet<Integer> numVals;
 	private boolean repeatable;
 	private String defaultVal;
+	private String description;
 	
 	/**
 	 * @param optionFlag Flag
@@ -22,7 +23,19 @@ public class ConfigFileOption {
 	 * @param isRequired Whether the option is required for the section it's in
 	 */
 	public ConfigFileOption(String optionFlag, int numValues, boolean fewerValuesOK, boolean isRepeatable, boolean isRequired) {
-		this(optionFlag, numValues, fewerValuesOK, isRepeatable, isRequired, null);
+		this(optionFlag, null, numValues, fewerValuesOK, isRepeatable, isRequired, null);
+	}
+	
+	/**
+	 * @param optionFlag Flag
+	 * @param description Description
+	 * @param numValues Number of values including flag
+	 * @param fewerValuesOK Can have any number of values between 1 and the specified number
+	 * @param isRepeatable Whether the option can be specified multiple times in the file
+	 * @param isRequired Whether the option is required for the section it's in
+	 */
+	public ConfigFileOption(String optionFlag, String description, int numValues, boolean fewerValuesOK, boolean isRepeatable, boolean isRequired) {
+		this(optionFlag, description, numValues, fewerValuesOK, isRepeatable, isRequired, null);
 	}
 	
 	/**
@@ -34,6 +47,20 @@ public class ConfigFileOption {
 	 * @param defaultValue Default value not including the flag itself
 	 */
 	public ConfigFileOption(String optionFlag, int numValues, boolean fewerValuesOK, boolean isRepeatable, boolean isRequired, String defaultValue) {
+		this(optionFlag, null, numValues, fewerValuesOK, isRepeatable, isRequired, defaultValue);
+	}
+	
+	/**
+	 * @param optionFlag Flag
+	 * @param description Description
+	 * @param numValues Number of values including flag
+	 * @param fewerValuesOK Can have any number of values between 1 and the specified number
+	 * @param isRepeatable Whether the option can be specified multiple times in the file
+	 * @param isRequired Whether the option is required for the section it's in
+	 * @param defaultValue Default value not including the flag itself
+	 */
+	public ConfigFileOption(String optionFlag, String description, int numValues, boolean fewerValuesOK, boolean isRepeatable, boolean isRequired, String defaultValue) {
+		this.description = description;
 		defaultVal = defaultValue;
 		flag = optionFlag;
 		required = isRequired;
@@ -85,6 +112,11 @@ public class ConfigFileOption {
 	protected boolean isRepeatable() {
 		return repeatable;
 	}
+	
+	/**
+	 * @return Description or null if not provided
+	 */
+	public String getDescription() {return description;}
 	
 	@Override
 	public String toString() {
