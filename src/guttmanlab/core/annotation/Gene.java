@@ -91,6 +91,7 @@ public class Gene extends BlockedAnnotation{
 		return toBED(0,0,0);
 	}
 	
+	@Override
 	public String toBED(double score) {
 		return toBED(0,0,0,score);
 	}

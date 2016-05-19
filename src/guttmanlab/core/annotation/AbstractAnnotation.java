@@ -250,18 +250,22 @@ public abstract class AbstractAnnotation implements Annotation {
 		return toBED(0,0,0);
 	}
 	
+	@Override
 	public String toBED() {
 		return toBED(0,0,0);
 	}
 	
+	@Override
 	public String toBED(double score) {
 		return toBED(0,0,0,score);
 	}
 	
+	@Override
 	public String toBED(int r, int g, int b){
 		return toBED(r, g, b, 0.0);
 	}
 	
+	@Override
 	public String toBED(int r, int g, int b, double score){
 		if(r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
 			throw new IllegalArgumentException("RGB values must be between 0 and 255");
@@ -280,10 +284,12 @@ public abstract class AbstractAnnotation implements Annotation {
 		return rtrn;
 	}
 
+	@Override
 	public String toUCSC() {
 		return getReferenceName()+":"+getReferenceStartPosition()+"-"+getReferenceEndPosition();
 	}
 	
+	@Override
 	public Annotation convertToFeatureSpace(Annotation region){
 		//Ensure that region overlaps feature
 		if(overlaps(region)){
@@ -318,6 +324,7 @@ public abstract class AbstractAnnotation implements Annotation {
 		return null;
 	}
 	
+	@Override
 	public Annotation convertToReferenceSpace(Annotation featureAnnotation){
 		BlockedAnnotation rtrn=new BlockedAnnotation();
 		Iterator<SingleInterval> blocks = getBlocks();
@@ -389,6 +396,7 @@ public abstract class AbstractAnnotation implements Annotation {
 		return record;
 	}
 	
+	@Override
 	public boolean fullyContained(Annotation other){
 		//All blocks in other must be in blocks on this
 		//Go through all blocks2 and check that they are in this
@@ -421,6 +429,7 @@ public abstract class AbstractAnnotation implements Annotation {
 		return false;	
 	}
 	
+	@Override
 	public Annotation trim(int start,int end)
 	{
 		SingleInterval bound = new SingleInterval(this.getReferenceName(),start,end,this.getOrientation());

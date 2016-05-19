@@ -31,11 +31,13 @@ public class DerivedAnnotation<T extends Annotation> extends BlockedAnnotation{
 		return parentDerivedFrom.getName();
 	}
 	
+	@Override
 	public Strand getOrientation()
 	{
 		return parentDerivedFrom.getOrientation();
 	}
 	
+	@Override
 	public DerivedAnnotation<T> merge(Annotation other)
 	{
 		Annotation merged = super.merge(other);

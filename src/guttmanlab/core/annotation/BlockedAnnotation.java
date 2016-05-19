@@ -128,6 +128,7 @@ public class BlockedAnnotation implements Annotation {
 		return this.name;
 	}
 
+	@Override
 	public Iterator<SingleInterval> getBlocks() {
 		return this.blocks.valueIterator();
 	}
@@ -164,6 +165,7 @@ public class BlockedAnnotation implements Annotation {
 	}
 	
 	//TODO This could actually go in the AbstractAnnotation
+	@Override
 	public int getRelativePositionFrom5PrimeOfFeature(int referenceStart){
 		if(referenceStart>=this.getReferenceEndPosition() || referenceStart<this.getReferenceStartPosition()){return -1;} //This start position is past the feature
 		Iterator<SingleInterval> iter=this.blocks.overlappingValueIterator(this.getReferenceStartPosition(), referenceStart);
