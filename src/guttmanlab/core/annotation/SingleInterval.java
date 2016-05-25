@@ -151,6 +151,7 @@ public class SingleInterval implements Annotation{
 	 * @param relativeEndPosition is the new end position, relative to the old
 	 * @return a new SingleInterval with the ends appropriately trimmed
 	 */
+	@Override
 	public SingleInterval trim(int relativeStart, int relativeEnd) {
 		if (getOrientation().equals(Strand.NEGATIVE)) {
 			int newEnd = getReferenceEndPosition() - relativeStart;
@@ -171,6 +172,7 @@ public class SingleInterval implements Annotation{
 	 * @param other is the other interval
 	 * @return whether or not this SingleInterval overlaps with another
 	 */
+	@Override
 	public boolean contains(Annotation other) {
 		if (other == null) {
 			return false;

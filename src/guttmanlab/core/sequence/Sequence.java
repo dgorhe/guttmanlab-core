@@ -148,6 +148,7 @@ public class Sequence {
 		throw new UnsupportedOperationException("TODO");
 	}
 	
+	@Override
 	public boolean equals(Object o) {
 		if(!o.getClass().equals(Sequence.class)) {
 			return false;
@@ -162,6 +163,7 @@ public class Sequence {
 		return true;
 	}
 	
+	@Override
 	public int hashCode() {
 		String s = getName() + ":" + getSequenceBases();
 		return s.hashCode();

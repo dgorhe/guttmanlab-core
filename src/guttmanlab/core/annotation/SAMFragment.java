@@ -203,7 +203,7 @@ public class SAMFragment implements MappedFragment{
 
 	@Override
 	public void setOrientation(Strand orientation) {
-		//Empty implementation since defined by parts
+		throw new UnsupportedOperationException("Defined by parts");
 	}
 	
 	/**
