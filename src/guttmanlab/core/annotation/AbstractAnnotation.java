@@ -57,24 +57,6 @@ public abstract class AbstractAnnotation implements Annotation {
 		}
 		return endpoints;
 	}
-
-	@Override
-	public Annotation merge(Annotation other) {
-		Strand consensusStrand = Annotation.Strand.consensusStrand(getOrientation(), other.getOrientation());
-		if(consensusStrand.equals(Strand.INVALID)) {
-			return null;
-		}
-		BlockedAnnotation rtrn=new BlockedAnnotation();
-		Iterator<SingleInterval> thisBlocks=getBlocks();
-		while(thisBlocks.hasNext()) {
-			rtrn.addBlocks(thisBlocks.next());
-		}
-		Iterator<SingleInterval> otherBlocks=other.getBlocks();
-		while(otherBlocks.hasNext()) {
-			rtrn.addBlocks(otherBlocks.next());
-		}
-		return rtrn;
-	}
 	
 	/**
 	 * Merges this annotation with another. The type of merging is determined by the
