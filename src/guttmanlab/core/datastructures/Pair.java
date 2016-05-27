@@ -11,8 +11,16 @@ public class Pair<T> {
 	private T value1;
 	private T value2;
 	
-	public Pair(){}
+	/**
+	 * Default Pair constructor. Both elements of this Pair are null.
+	 */
+	public Pair() {}
 	
+	/**
+	 * Creates a new Pair with the given arguments.
+	 * @param v1 - the first element
+	 * @param v2 - the second element
+	 */
 	public Pair(T v1, T v2) {
 		value1 = v1;
 		value2 = v2;
@@ -27,19 +35,35 @@ public class Pair<T> {
 	public static <T> Pair<T> of(T v1, T v2) {
 		return new Pair<T>(v1, v2);
 	}
-	
-	public void setValue1(T v1) {
-		value1 = v1;
+
+	/**
+	 * Changes the value of the first element
+	 * @param v - the value to change the first element to
+	 */
+	public void setValue1(T v) {
+		value1 = v;
 	}
 	
-	public void setValue2(T v2){
-		value2 = v2;
+	/**
+	 * Changes the value of the second element
+	 * @param v - the value to change the second element to
+	 */
+	public void setValue2(T v){
+		value2 = v;
 	}
-	
+
+	/**
+	 * Gets the first element of this Pair.
+	 * @return a reference to the first element of this Pair
+	 */
 	public T getValue1() {
 		return value1;
 	}
 	
+	/**
+	 * Gets the second element of this Pair.
+	 * @return a reference to the second element of this Pair
+	 */
 	public T getValue2() {
 		return value2;
 	}

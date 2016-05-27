@@ -1,7 +1,9 @@
 package guttmanlab.core.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -10,41 +12,107 @@ import guttmanlab.core.datastructures.Pair;
 public class PairTest {
 	
 	@Test
-	public void testPairSimpleEqualsBehavior() {
-		Pair<Integer> a = Pair.of(1, 2);
-		Pair<Integer> b = Pair.of(1, 2);
-		Pair<Integer> leftNull1 = Pair.of(null, 1);
-		Pair<Integer> leftNull2 = Pair.of(null, 1);
-		Pair<Integer> rightNull1 = Pair.of(1, null);
-		Pair<Integer> rightNull2 = Pair.of(1, null);
-		Pair<Integer> allNull1 = Pair.of(null, null);
-		Pair<Integer> allNull2 = Pair.of(null, null);
-
-		assertEquals(a, b);
-		assertEquals(leftNull1, leftNull2);
-		assertEquals(rightNull1, rightNull2);
-		assertEquals(allNull1, allNull2);
+	public void testEmptyPairConstructor() {
+		assertTrue(new Pair<Integer>().isEmpty());
 	}
 	
 	@Test
-	public void testPairSimpleNotEqualsBehavior() {
-		Pair<Integer> noNull1 = Pair.of(1, 2);
-		Pair<Integer> noNull2 = Pair.of(1, 3);
-		Pair<Integer> noNull3 = Pair.of(2, 2);
-		Pair<Integer> leftNull1 = Pair.of(null, 1);
-		Pair<Integer> leftNull2 = Pair.of(null, 2);
-		Pair<Integer> rightNull1 = Pair.of(1, null);
-		Pair<Integer> rightNull2 = Pair.of(2, null);
-		Pair<Integer> allNull = Pair.of(null, null);
+	public void testPairConstructor() {
+		assertTrue(new Pair<Integer>(6, 7).isComplete());
+	}
 
-		assertNotEquals(noNull1, noNull2);
-		assertNotEquals(noNull2, noNull3);
-		assertNotEquals(noNull1, noNull3);
-		assertNotEquals(leftNull1, leftNull2);
-		assertNotEquals(rightNull1, rightNull2);
-		assertNotEquals(noNull1, leftNull1);
-		assertNotEquals(noNull2, rightNull2);
-		assertNotEquals(allNull, leftNull1);
-		assertNotEquals(allNull, rightNull1);
+	@Test
+	public void testEmptyPairIsEmpty() {
+		assertTrue(Pair.of(null, null).isEmpty());
+	}
+	
+	@Test
+	public void testValue1PairIsNotEmpty() {
+		assertFalse(Pair.of(1, null).isEmpty());
+	}
+	
+	@Test
+	public void testValue2PairIsNotEmpty() {
+		assertFalse(Pair.of(null, 2).isEmpty());
+	}
+	
+	@Test
+	public void testCompletePairIsNotEmpty() {
+		assertFalse(Pair.of(1, 2).isEmpty());
+	}
+	
+	@Test
+	public void testEmptyPairIsNotComplete() {
+		assertFalse(Pair.of(null, null).isComplete());
+	}
+	
+	@Test
+	public void testValue1PairIsNotComplete() {
+		assertFalse(Pair.of(1, null).isComplete());
+	}
+	
+	@Test
+	public void testValue2PairIsNotComplete() {
+		assertFalse(Pair.of(null, 2).isComplete());
+	}
+	
+	@Test
+	public void testCompletePairIsComplete() {
+		assertTrue(Pair.of(1, 2).isComplete());
+	}
+	
+	@Test
+	public void testEmptyPairToString() {
+		assertEquals("(null, null)", Pair.of(null, null).toString());
+	}
+	
+	@Test
+	public void testValue1PairToString() {
+		assertEquals("(1, null)", Pair.of(1, null).toString());
+	}
+
+	@Test
+	public void testValue2PairToString() {
+		assertEquals("(null, 1)", Pair.of(null, 1).toString());
+	}
+	
+	@Test
+	public void testCompletePairToString() {
+		assertEquals("(2, 1)", Pair.of(2, 1).toString());
+	}
+	
+	@Test
+	public void testSameReferenceEquals() {
+		Pair<Integer> a = Pair.of(1, 2);
+		Pair<Integer> b = a;
+		assertTrue(a == b && a.equals(b));
+	}
+	
+	@Test
+	public void testDifferentTypeNotEquals() {
+		Pair<Integer> a = Pair.of(1, 2);
+		Pair<Double> b = Pair.of(1.0, 2.0);
+		assertNotEquals(a, b);
+	}
+	
+	@Test
+	public void testSameValuesDifferentObjectEquals() {
+		Pair<Integer> a = Pair.of(1, 2);
+		Pair<Integer> b = Pair.of(1, 2);
+		assertTrue(a != b && a.equals(b));
+	}
+	
+	@Test
+	public void testBothValuesDifferentNotEquals() {
+		Pair<Integer> a = Pair.of(1, 2);
+		Pair<Integer> b = Pair.of(3, 4);
+		assertNotEquals(a, b);
+	}
+	
+	@Test
+	public void testEqualsSymmetry() {
+		Pair<Integer> a = Pair.of(1, 2);
+		Pair<Integer> b = Pair.of(1, 2);
+		assertTrue(a.equals(b) && b.equals(a));
 	}
 }
