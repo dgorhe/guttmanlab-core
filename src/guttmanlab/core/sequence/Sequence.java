@@ -1,172 +1,223 @@
 package guttmanlab.core.sequence;
 
-import guttmanlab.core.annotation.Annotation;
-import guttmanlab.core.annotation.Annotation.Strand;
-import guttmanlab.core.annotation.SingleInterval;
-
-import java.util.Collection;
-import java.util.Iterator;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
- * A nucleotide sequence
- * @author prussell
- *
+ * A representation of a sequence of nucleotides.
+ * <p><p>
+ * A Sequence is simply a sequence of nucleotides bundled with a name.
  */
 public class Sequence {
 	
-	private String sequence;
-	private String name;
+	protected final String sequence;
+	protected String name;
+	protected static final String nl = "\n";
 	
-	public Sequence(String name, String seq){
-		this.name=name;
-		this.sequence=seq;
+	/**
+	 * {@code Sequence} constructor.
+	 * <p>
+	 * This constructor does not check the seq parameter. Any String can be
+	 * passed as a sequence of bases.
+	 * @param name  the name of this Sequence
+	 * @param seq   the bases of this Sequence
+	 * @throws IllegalArgumentException if null is passed as an argument
+	 */
+	public Sequence(String name, String seq) {
+		if (name == null) {
+			throw new IllegalArgumentException("Attempted to construct a Sequence"
+					+ " object with a null name");
+		}
+		if (seq == null) {
+			throw new IllegalArgumentException("Attempted to construct a Sequence"
+					+ " object with a null sequence");
+		}
+		this.name = name;
+		this.sequence = seq;
 	}
-	
-	public Sequence(String seq){
-		this.sequence=seq;
+
+	/**
+	 * @return the bases of this Sequence
+	 */
+	public String bases() {
+		return sequence;
 	}
 	
 	/**
-	 * @return A new sequence that is the reverse complement of this sequence
+	 * @return the name of this Sequence
+	 */
+	public String name() {
+		return name;
+	}
+	
+	/**
+	 * Constructs a new Sequence which is identical to this Sequence, except
+	 * with a different name. This method creates a new Sequence rather than
+	 * modifying this Sequence in order to maintain immutability.
+	 * @param name  the new name
+	 * @return a Sequence with a different name but otherwise identical
+	 */
+    public Sequence changeName(String name) {
+        return new Sequence(name, sequence);
+    }
+	
+	/**
+	 * Creates a new Sequence object in which the bases have been reverse-
+	 * complemented. The name of the new Sequence remains the same.
+	 * @return the reverse-complement of this Sequence
 	 */
 	public Sequence reverseComplement() {
-		Sequence tmpSeq = new Sequence(this.sequence);
-		tmpSeq.reverse();
-		return tmpSeq;
+		return reverseComplement(name);
+	}
+
+
+	/**
+	 * Creates a new Sequence object in which the bases have been reverse-
+     * complemented. 
+	 * @param name  the name of the new Sequence
+	 * @return the reverse-complement of this Sequence
+	 */
+	public Sequence reverseComplement(String name) {
+		return new Sequence(name, reverse(complement(sequence)));
 	}
 	
+	protected String reverse(String s) {
+		return (new StringBuilder(s).reverse().toString());
+	}
 	
-	private void reverse() {
-		String seqBases = getSequenceBases();
-		String reversedSeq = "";
-		for(int j = seqBases.length() - 1; j >= 0 ; j--) {
-			char c = seqBases.charAt(j);
-			if('c' == c) {
-				reversedSeq+='g';
-			}else if ('C' == c) {
-				reversedSeq+='G';
-			}else if ('G' == c) {
-				reversedSeq+='C';
-			}else if ('g' == c) {
-				reversedSeq+=('c');
-			}else if ('a' == c) {
-				reversedSeq+=('t');
-			}else if ('A' == c) {
-				reversedSeq+=('T');
-			}else if('t' == c) {
-				reversedSeq+=('a');
-			}else if('T' == c) {
-				reversedSeq+=('A');
-			}else if('N'==c){
-				reversedSeq+=('N');
-			}else if('n'==c){
-				reversedSeq+=('n');
-			}else {
-				reversedSeq+=(c);
-			}
+	protected String complement(String s) {
+		char[] cs = s.toCharArray();
+		char[] rtrn = new char[cs.length];
+		for (int i = 0; i < cs.length; i++) {
+			rtrn[i] = complement(cs[i]);
 		}
-		
-		this.sequence = reversedSeq;
+		return String.valueOf(rtrn);
 	}
 	
 	/**
-	 * @return Return the sequence bases
+	 * Complements a base.
+	 * <p>
+	 * Case is retained (for example, {@code complement('a') == 't'}).
+	 * Only characters in [ACGTNacgtn] are supported.
+	 * @param c  the base to complement
+	 * @return the complement of this base
+	 * @throws IllegalArgumentException if passed an unsupported base
 	 */
-	public String getSequenceBases() {
-		return this.sequence;
-	}
-	
-	public String getName(){
-		return this.name;
+	protected char complement(char c) {
+		switch (c) {
+		case 'A': return 'T';
+		case 'C': return 'G';
+		case 'G': return 'C';
+		case 'T': return 'A';
+		case 'N': return 'N';
+		case 'a': return 't';
+		case 'c': return 'g';
+		case 'g': return 'c';
+		case 't': return 'a';
+		case 'n': return 'n';
+		default: throw new IllegalArgumentException("Unsupported base: " + c);
+		}
 	}
 	
 	/**
-	 * @return Sequence length
+     * Creates a subsequence of this Sequence as a new Sequence object.
+     * The name of the new Sequence remains the same. The coordinates
+     * are zero-based. The new Sequence begins at the specified start
+     * coordinate and extends to the base at the specified end
+     * coordinate minus 1. 
+     * @param start  the start coordinate
+     * @param end    the end coordinate
+     * @return a subsequence of this Sequence
+     */
+	public Sequence subsequence(int start, int end) {
+		return subsequence(name, start, end);
+	}
+
+	/**
+     * Creates a subsequence of this Sequence as a new Sequence object
+     * with a different name. The coordinates are zero-based. The new
+     * Sequence begins at the specified start coordinate and extends to
+     * the base at the specified end coordinate minus 1.
+     * @param name   the new name 
+     * @param start  the start coordinate
+     * @param end    the end coordinate
+     * @return a subsequence of this Sequence
+     */
+	public Sequence subsequence(String name, int start, int end) {
+		String subseq = sequence.substring(Math.max(start, 0),
+				Math.min(end, sequence.length()));
+		return new Sequence(name, subseq);
+	}
+	
+	/**
+	 * @return the length of the sequence of bases in this Sequence
 	 */
-	public int getLength() {
+	public int length() {
 		return sequence.length();
 	}
 	
 	/**
-	 * Get subsequence
-	 * @param name Name of new sequence to return
-	 * @param start Start position of subsequence
-	 * @param end Position after last position to include
-	 * @return The subsequence
+	 * @return if this Sequence consists entirely of A's or entirely of
+	 * T's, case-insensitive
 	 */
-	public Sequence getSubSequence(String name, int start, int end) {
-		String subSeq = sequence.substring(Math.max(start, 0), Math.min(end, sequence.length()));
-		Sequence seq = new Sequence(name, subSeq);
-		return seq;
+	public boolean isPolyA() {
+		return sequence.chars().allMatch(c -> c == 'a' || c == 'A') ||
+				sequence.chars().allMatch(c -> c == 't' || c == 'T');
 	}
 	
 	/**
-	 * Get the spliced transcribed sequence of an annotation
-	 * Bases are reported in 5' to 3' direction
-	 * @param annot The annotation
-	 * @return Sequence with same name as annotation containing the transcribed sequence
+	 * Converts this Sequence into a String representation suitable for
+	 * outputting to a FASTA file. This String is not newline terminated.
 	 */
-	public Sequence getSubsequence(Annotation annot) {
-		if(!annot.getOrientation().equals(Strand.POSITIVE) && !annot.getOrientation().equals(Strand.NEGATIVE)) {
-			throw new IllegalArgumentException("Strand must be known");
-		}
-		String seq = "";
-		Iterator<SingleInterval> blockIter = annot.getBlocks();
-		while(blockIter.hasNext()) {
-			SingleInterval block = blockIter.next();
-			Sequence blockSequence = getSubSequence("", block.getReferenceStartPosition(), block.getReferenceEndPosition());
-			String forwardBases = blockSequence.getSequenceBases();
-			if(annot.getOrientation().equals(Strand.POSITIVE)) {
-				seq += forwardBases;
-			} else {
-				String rc = new Sequence(forwardBases).reverseComplement().getSequenceBases();
-				seq = rc + seq;
-			}
-		}
-		return new Sequence(annot.getName(), seq);
+	public String toFasta() {
+		return ">" + name + nl + sequence;
+	}
+
+    /**
+     * Converts this Sequence into a String representation suitable for
+     * outputting to a FASTA file. This String is not newline terminated.
+     */
+	public String toFormattedString() {
+	    return toFasta();
 	}
 	
 	/**
-	 * Soft mask the specified regions
-	 * Throw an exception if the annotations do not refer to this sequence
-	 * @param regions The regions to mask with respect to this sequence
-	 * @return A new sequence with the regions soft masked
+	 *  Returns a String representation of this Sequence. The exact details of
+	 *  this representation are unspecified and subject to change, but the
+	 *  following may be regarded as typical: "name:sequence"
 	 */
-	public Sequence softMask(Collection<Annotation> regions) {
-		// TODO
-		throw new UnsupportedOperationException();
-	}
-	
-	/**
-	 * Hard mask the specified regions
-	 * Throw an exception if the annotations do not refer to this sequence
-	 * @param regions The regions to mask with respect to this sequence
-	 * @return A new sequence with the regions hard masked
-	 */
-	public Sequence hardMask(Collection<Annotation> regions) {
-		// TODO
-		throw new UnsupportedOperationException("TODO");
+	@Override
+	public String toString() {
+		return name + ": " + sequence;
 	}
 	
 	@Override
 	public boolean equals(Object o) {
-		if(!o.getClass().equals(Sequence.class)) {
+		
+		if (this == o) {
+			return true;
+		}
+		
+		if (!(o instanceof Sequence)) {
 			return false;
 		}
-		Sequence otherSeq = (Sequence)o;
-		if(!getName().equals(otherSeq.getName()))	{
+		
+		Sequence other = (Sequence) o;
+
+		if (!name().equals(other.name()))	{
 			return false;
 		}
-		if(!getSequenceBases().equals(otherSeq.getSequenceBases()))	{
+		if (!bases().equals(other.bases()))	{
 			return false;
 		}
+		
 		return true;
 	}
 	
 	@Override
 	public int hashCode() {
-		String s = getName() + ":" + getSequenceBases();
-		return s.hashCode();
-	}
-	
+		return new HashCodeBuilder(17, 31)
+			.append(name)
+			.append(sequence)
+			.hashCode();
+	}	
 }
