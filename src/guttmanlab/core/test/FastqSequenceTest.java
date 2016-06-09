@@ -150,6 +150,6 @@ public class FastqSequenceTest {
     
     @Test
     public void toFormattedStringTest() {
-        assertThat(seq1.toFormattedString(PhredEncoding.SANGER), is(equalTo(seq1String)));
+        assertThat(seq1.toFormattedString(), is(equalTo(seq1String)));
     }
 }

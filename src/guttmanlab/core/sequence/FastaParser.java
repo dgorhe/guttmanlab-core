@@ -7,15 +7,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
 /**
  * A class for parsing FASTA files.
  * <p><p>
- * This class implements AutoCloseable, and is meant to be used in a try-with-
- * resources statement when used as an iterator:
+ * This class implements CloseableIterator, and is meant to be used in a try-
+ * with-resources statement:
  * <pre>
  * {@code
  * try (FastaParser p = new FastaParser(path)) {
@@ -25,37 +24,18 @@ import org.apache.log4j.Logger;
  * }
  * </pre>
  */
-public final class FastaParser implements Iterator<Sequence>, AutoCloseable {
+public final class FastaParser extends SequenceParser<Sequence> {
 
-	private final Path p;
-    private final BufferedReader br;
-    private Sequence next;
-    private final static int NUM_FASTA_LINES = 2;
-    
+    private static final int NUM_FASTA_LINES = 2;
     private static final Logger logger = Logger.getLogger(FastaParser.class);
     
     public FastaParser(Path p) throws IOException {
-        if (p == null) {
-            throw new IllegalArgumentException("FastqParser constructed with"
-                    + " null path.");
-        }
-
-        this.p = p;
-        br = Files.newBufferedReader(p, StandardCharsets.US_ASCII);
+        super(p);
         findNext();
     }
-    
-    @Override
-    public void close() throws IOException {
-        br.close();
-    }
 
     @Override
-    public boolean hasNext() {
-        return next != null;
-    }
-
-    private void findNext() {
+    protected void findNext() {
         String[] s = new String[NUM_FASTA_LINES];
         String line = null;
         int i = 0;
@@ -75,13 +55,6 @@ public final class FastaParser implements Iterator<Sequence>, AutoCloseable {
         }
     }
     
-    @Override
-    public Sequence next() {
-        Sequence rtrn = next;
-        findNext();
-        return rtrn;
-    }
-    
     /**
      * Reads an entire FASTA file into memory.
      * <p><p>
@@ -93,6 +66,8 @@ public final class FastaParser implements Iterator<Sequence>, AutoCloseable {
      */
     public static Collection<Sequence> slurp(Path p) throws IOException {
 
+        checkHeapSize(p);
+        
     	logger.info("Reading sequences from FASTA file " + p.toString());
 
     	Collection<Sequence> rtrn = new ArrayList<Sequence>();
@@ -116,5 +91,37 @@ public final class FastaParser implements Iterator<Sequence>, AutoCloseable {
 			
 		}
 		return rtrn;
+    }
+    
+    /**
+     * Checks if there's enough heap memory allocated to handle reading in the
+     * file at the given Path.
+     * <p><p>
+     * Throws an error if the maximum heap size is greater than the size of the file.
+     * @param p  path of the file
+     * @throws OutOfMemoryError if there isn't enough heap memory.
+     */
+    private static void checkHeapSize(Path p) {
+        long maxHeapSize = Runtime.getRuntime().maxMemory();
+        long fileSize = 0;
+
+        try {
+            fileSize = Files.size(p);
+        } catch (IOException e) {
+            logger.error("Unable to check file size of " + p.toString(), e);
+        }
+
+        if (fileSize > maxHeapSize) {
+            String msg = "File " + p.toString() + " is too large. File"
+                    + "size: " + fileSize + " bytes. Max heap size: "
+                    + maxHeapSize + " bytes.";
+            logger.fatal(msg);
+            throw new OutOfMemoryError(msg);  // What's the best way to deal with this?
+        }
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }

@@ -1,8 +1,5 @@
 package guttmanlab.core.sequence;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
@@ -13,8 +10,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  */
 public final class FastqSequence extends Sequence {
 
-    // byte[] instead of String to handle different Phred encodings
-    private final byte[] quality;
+    private final PhredEncoding pe;
+    private final String quality;
     
     /**
      * FastqSequence constructor.
@@ -48,12 +45,8 @@ public final class FastqSequence extends Sequence {
                     + " scores do not agree.");
         }
         
-        byte[] tmp = quality.getBytes(StandardCharsets.US_ASCII);
-        for (int i = 0; i < tmp.length; i++) {
-            tmp[i] -= pe.offset();
-        }
-        
-        this.quality = tmp;
+        this.quality = quality;
+        this.pe = pe;
     }
     
     /**
@@ -72,19 +65,10 @@ public final class FastqSequence extends Sequence {
     public FastqSequence(String name, String seq, String quality) {
     	this(name, seq, quality, PhredEncoding.SANGER);
     }
-    
-    /*
-     * Constructor passing the quality as raw byte scores instead of a string.
-     * Used internally.
-     */
-    private FastqSequence(String name, String seq, byte[] quality) {
-        super(name, seq);
-        this.quality = quality; // does not copy the array!
-    }
 
     @Override
     public FastqSequence changeName(String name) {
-        return new FastqSequence(name, sequence, Arrays.copyOf(quality, quality.length));
+        return new FastqSequence(name, sequence, quality, pe);
     }
     
     @Override
@@ -94,12 +78,8 @@ public final class FastqSequence extends Sequence {
 
     @Override
     public FastqSequence reverseComplement(String name) {
-        byte[] reverseQuals = new byte[quality.length];
-        for (int i = 0; i < reverseQuals.length; i++) {
-            reverseQuals[i] = quality[quality.length - i - 1];
-        }
         return new FastqSequence(name, reverse(complement(sequence)),
-                reverseQuals);
+                reverse(quality));
     }
     
     @Override
@@ -110,32 +90,17 @@ public final class FastqSequence extends Sequence {
     @Override
     public FastqSequence subsequence(String name, int start, int end) {
         String subseq = sequence.substring(start, end);
-        byte[] subqual = Arrays.copyOfRange(quality, start, end);
-        return new FastqSequence(name, subseq, subqual);
+        String subqual = quality.substring(start, end);
+        return new FastqSequence(name, subseq, subqual, pe);
     }
     
     /**
      * Converts this Sequence into a String representation suitable for
      * outputting to a FASTQ file. This String is not newline terminated.
-     * @param pe  the Phred encoding to apply to the quality scores of
-     * this FastqSequence
-     */
-    public String toFormattedString(PhredEncoding pe) {
-        byte[] tmp = new byte[quality.length];
-        for (int i = 0; i < quality.length; i++) {
-            tmp[i] = (byte) (quality[i] + pe.offset());
-        }
-        return "@" + name + nl + sequence + nl + "+" + nl + new String(tmp);
-    }
-
-    /**
-     * Converts this Sequence into a String representation suitable for
-     * outputting to a FASTQ file. Assumes a Sanger Phred encoding. This
-     * String is not newline terminated.
      */
     @Override
     public String toFormattedString() {
-        return toFormattedString(PhredEncoding.SANGER);
+        return "@" + name + nl + sequence + nl + "+" + nl + quality;
     }
     
     @Override
@@ -154,17 +119,7 @@ public final class FastqSequence extends Sequence {
         // OK to cast this. Class was explicitly checked above
         FastqSequence o = (FastqSequence) other;
         
-        if (quality.length != o.quality.length) {
-            return false;
-        }
-        
-        boolean qualityEquals = true;
-        for (int i = 0; i < quality.length; i++) {
-            if (quality[i] != o.quality[i]) {
-                qualityEquals = false;
-            }
-        }
-        return qualityEquals && name.equals(o.name)
+        return quality.equals(o.quality) && name.equals(o.name)
                 && sequence.equals(o.sequence);
     }
     

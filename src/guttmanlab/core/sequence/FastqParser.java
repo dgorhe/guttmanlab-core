@@ -7,61 +7,60 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
-public final class FastqParser implements Iterator<FastqSequence>, AutoCloseable {
+/**
+ * A class for parsing FASTQ files.
+ * <p><p>
+ * This class implements AutoCloseable, and is meant to be used in a try
+ * with-resources statement when used as an iterator:
+ * <pre>
+ * {@code
+ * try (FastqParser p = new FastqParser(path, PhredEncoding.SANGER)) {
+ *     while (p.hasNext()) {
+ *         doStuff();
+ *     }
+ * }
+ * </pre>
+ */
+public final class FastqParser extends SequenceParser<FastqSequence> {
 
-	private final Path p;
-    private final BufferedReader br;
-    private FastqSequence nextFastq;
     private final PhredEncoding pe;
     private final static int NUM_FASTQ_LINES = 4;
     
     private static final Logger logger = Logger.getLogger(FastqParser.class);
 
     /**
-     * A class for parsing FASTQ files.
-     * <p><p>
-     * This class implements AutoCloseable, and is meant to be used in a try-with-
-     * resources statement when used as an iterator:
-     * <pre>
-     * {@code
-     * try (FastqParser p = new FastqParser(path, PhredEncoding.SANGER)) {
-     *     while (p.hasNext()) {
-     *         doStuff();
-     *     }
-     * }
-     * </pre>
+     * FastqParser constructor.
+     * @param p   the path to the FASTQ file
+     * @param pe  the encoding scheme of the Phred quality scores
+     * @throws IllegalArgumentException if null passed as an argument
+     * @throws IOException if an I/O error occurs opening the FASTQ file
      */
     public FastqParser(Path p, PhredEncoding pe) throws IOException {
-        if (p == null) {
-            throw new IllegalArgumentException("FastqParser constructed with"
-                    + " null path.");
-        }
-        
+        super(p);      
         if (pe == null) {
             throw new IllegalArgumentException("FastqParser constructed with"
                     + " null phred encoding.");
-        }
-        this.p = p;
-        br = Files.newBufferedReader(p, StandardCharsets.US_ASCII);
+        }  
         this.pe = pe;
         findNext();
     }
-    
-    @Override
-    public void close() throws IOException {
-        br.close();
+
+    /**
+     * FastqParser constructor.
+     * <p><p>
+     * Defaults to Sanger Phred encoding scheme.
+     * @param p   the path to the FASTQ file
+     * @throws IllegalArgumentException if null passed as an argument
+     * @throws IOException if an I/O error occurs opening the FASTQ file
+     */
+    public FastqParser(Path p) throws IOException {
+        this(p, PhredEncoding.SANGER);
     }
 
-    @Override
-    public boolean hasNext() {
-        return nextFastq != null;
-    }
-
-    private void findNext() {
+    protected void findNext() {
         String[] s = new String[NUM_FASTQ_LINES];
         String line = null;
         int i = 0;
@@ -74,18 +73,11 @@ public final class FastqParser implements Iterator<FastqSequence>, AutoCloseable
             e.printStackTrace();
         }
         if (s[3] != null) {
-            nextFastq = new FastqSequence(s[0].substring(1), s[1], s[3], pe);
+            next = new FastqSequence(s[0].substring(1), s[1], s[3], pe);
         } else {
-            nextFastq = null;
+            next = null;
             logger.warn("FASTQ file " + p.toString() + " has an incomplete final record.");
         }
-    }
-    
-    @Override
-    public FastqSequence next() {
-        FastqSequence rtrn = nextFastq;
-        findNext();
-        return rtrn;
     }
 
     /**
@@ -102,6 +94,8 @@ public final class FastqParser implements Iterator<FastqSequence>, AutoCloseable
      */
     public static Collection<Sequence> slurp(Path p, PhredEncoding pe) throws IOException {
 
+        checkHeapSize(p);
+        
     	logger.info("Reading sequences from FASTQ file " + p.toString());
 
     	Collection<Sequence> rtrn = new ArrayList<Sequence>();
@@ -137,5 +131,37 @@ public final class FastqParser implements Iterator<FastqSequence>, AutoCloseable
 			
 		}
 		return rtrn;
+    }
+    
+    /**
+     * Checks if there's enough heap memory allocated to handle reading in the
+     * file at the given Path.
+     * <p><p>
+     * Throws an error if the maximum heap size is greater than the size of the file.
+     * @param p  path of the file
+     * @throws OutOfMemoryError if there isn't enough heap memory.
+     */
+    private static void checkHeapSize(Path p) {
+        long maxHeapSize = Runtime.getRuntime().maxMemory();
+        long fileSize = 0;
+
+        try {
+            fileSize = Files.size(p);
+        } catch (IOException e) {
+            logger.error("Unable to check file size of " + p.toString(), e);
+        }
+
+        if (fileSize > maxHeapSize) {
+            String msg = "File " + p.toString() + " is too large. File"
+                    + "size: " + fileSize + " bytes. Max heap size: "
+                    + maxHeapSize + " bytes.";
+            logger.fatal(msg);
+            throw new OutOfMemoryError(msg);  // What's the best way to deal with this?
+        }
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
