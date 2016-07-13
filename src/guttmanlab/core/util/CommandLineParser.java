@@ -311,6 +311,7 @@ public final class CommandLineParser {
 	 * If command line is not in proper form, prints help menu and exits
 	 * If a required argument is missing, prints help menu and exits
 	 * @param args the command line arguments passed to a main program
+	 * @param allowDuplicateTags Tags are allowed to be specified more than once
 	 */
 	public void parse(String[] args, boolean allowDuplicateTags) {
 		
@@ -383,6 +384,12 @@ public final class CommandLineParser {
 		
 	}
 	
+	/**
+	 * Parse command arguments
+	 * If command line is not in proper form, prints help menu and exits
+	 * If a required argument is missing, prints help menu and exits
+	 * @param args the command line arguments passed to a main program
+	 */
 	public void parse(String[] args) {
 		parse(args,false);
 	}
