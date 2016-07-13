@@ -40,74 +40,84 @@ public class AvroStringIndex extends AbstractAvroIndex<String> {
 	}
 
 	@Override
-	public void loadIndex(boolean validate) throws IOException {
+	public void loadIndex(boolean validate) {
 		logger.info("");
 		logger.info("Reading index from file " + indexFileName + "...");
-		positionsByKey = new TreeMap<String, Long>();
-		FileReader r = new FileReader(indexFileName);
-		BufferedReader b = new BufferedReader(r);
-		StringParser s = new StringParser();
-		long previousPos = 0;
-		long currentPos = 0;
-		String[] previousKey = new String[1];
-		Collection<Long> messagesWritten = new TreeSet<Long>();
-		while(b.ready()) {
-			s.parse(b.readLine());
-			String key = s.asString(0);
-			currentPos = s.asLong(1);
-			// Check that the block numbers are increasing
+		try {
+			positionsByKey = new TreeMap<String, Long>();
+			FileReader r = new FileReader(indexFileName);
+			BufferedReader b = new BufferedReader(r);
+			StringParser s = new StringParser();
+			long previousPos = 0;
+			long currentPos = 0;
+			String[] previousKey = new String[1];
+			Collection<Long> messagesWritten = new TreeSet<Long>();
+			while(b.ready()) {
+				s.parse(b.readLine());
+				String key = s.asString(0);
+				currentPos = s.asLong(1);
+				// Check that the block numbers are increasing
+				if(validate) {
+					if(currentPos <= previousPos) {
+						b.close();
+						throw new IllegalStateException("Index validation error: wrong order for file blocks " + previousPos + ", " + currentPos + ".");
+					}
+				}
+				if(!key.equals(previousKey[0])) {
+					// We've found a new key
+					previousKey[0] = key;
+					if(validate) {
+						// Check that the first record in this block has the reported key
+						GenericData.Record record = null;
+						reader.sync(previousPos);
+						try {
+							record = new GenericData.Record((Record) reader.next(), true);
+						} catch(AvroRuntimeException e) {
+							e.printStackTrace();
+							logger.warn("Caught exception. Skipping record at position " + currentPos);
+							continue;
+						}
+						String recordKey = record.get(indexedField).toString();
+						if(!recordKey.equals(key)) {
+							b.close();
+							throw new IllegalStateException("At file block " + reader.tell() + ": Index validation error: beginning of block " + currentPos + " in avro file has key " + recordKey + ". Index has " + key + ".");
+						}
+					}
+					Long prevVal = positionsByKey.put(key, Long.valueOf(currentPos));
+					if(validate) {
+						if(prevVal != null) {
+							b.close();
+							throw new IllegalStateException("Key " + key + " was already in map with value " + prevVal);
+						}
+						long nearestMillion = currentPos - (currentPos % 1000000);
+						if(nearestMillion % 10000000 == 0 && !messagesWritten.contains(Long.valueOf(nearestMillion))) {
+							logger.info("Index position " + nearestMillion);
+							messagesWritten.add(Long.valueOf(nearestMillion));
+						}				
+					}
+				}
+				previousPos = currentPos;
+			}
+			b.close();
 			if(validate) {
-				if(currentPos <= previousPos) {
-					b.close();
-					throw new IllegalStateException("Index validation error: wrong order for file blocks " + previousPos + ", " + currentPos + ".");
-				}
+				reportIndexValidated();
 			}
-			if(!key.equals(previousKey[0])) {
-				// We've found a new key
-				previousKey[0] = key;
-				if(validate) {
-					// Check that the first record in this block has the reported key
-					GenericData.Record record = null;
-					reader.sync(previousPos);
-					try {
-						record = new GenericData.Record((Record) reader.next(), true);
-					} catch(AvroRuntimeException e) {
-						e.printStackTrace();
-						logger.warn("Caught exception. Skipping record at position " + currentPos);
-						continue;
-					}
-					String recordKey = record.get(indexedField).toString();
-					if(!recordKey.equals(key)) {
-						b.close();
-						throw new IllegalStateException("At file block " + reader.tell() + ": Index validation error: beginning of block " + currentPos + " in avro file has key " + recordKey + ". Index has " + key + ".");
-					}
-				}
-				Long prevVal = positionsByKey.put(key, Long.valueOf(currentPos));
-				if(validate) {
-					if(prevVal != null) {
-						b.close();
-						throw new IllegalStateException("Key " + key + " was already in map with value " + prevVal);
-					}
-					long nearestMillion = currentPos - (currentPos % 1000000);
-					if(nearestMillion % 10000000 == 0 && !messagesWritten.contains(Long.valueOf(nearestMillion))) {
-						logger.info("Index position " + nearestMillion);
-						messagesWritten.add(Long.valueOf(nearestMillion));
-					}				
-				}
-			}
-			previousPos = currentPos;
-		}
-		b.close();
-		if(validate) {
-			reportIndexValidated();
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
 		}
 	}
 	
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public GenericRecord seek(String key) throws IOException {
-		seekToBlockStart(key);
+	public GenericRecord seek(String key) {
+		try {
+			seekToBlockStart(key);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			System.exit(-1);
+		}
 		while(true) {
 			try {
 				GenericData.Record record = new GenericData.Record((Record) reader.next(), true);
@@ -130,8 +140,14 @@ public class AvroStringIndex extends AbstractAvroIndex<String> {
 	}
 
 	@Override
-	public List<GenericRecord> get(String key) throws IOException {
-		return get(key, null, null);
+	public List<GenericRecord> get(String key) {
+		try {
+			return get(key, null, null);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+			return null; // Unreachable
+		}
 	}
 	
 	/**
