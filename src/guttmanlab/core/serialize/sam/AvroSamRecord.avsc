@@ -210,10 +210,6 @@
 		{
 			"name": "tagUQ",
 			"type": ["null", "int"]
-		},
-		{
-			"name": "tagXB",
-			"type": ["null", "string"]
 		}
 	]
 }
