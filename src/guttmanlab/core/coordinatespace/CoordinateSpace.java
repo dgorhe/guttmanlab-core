@@ -6,9 +6,11 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMSequenceRecord;
@@ -19,6 +21,43 @@ import net.sf.samtools.SAMSequenceRecord;
  *
  */
 public class CoordinateSpace {
+	
+	public static CoordinateSpace MM9 = new CoordinateSpace(GenomeSize.MM9);
+	public static CoordinateSpace MM10 = new CoordinateSpace(GenomeSize.MM10);
+	public static CoordinateSpace HG19 = new CoordinateSpace(GenomeSize.HG19);
+	
+	private enum Precomputed {
+				
+		MM9("mm9"), MM10("mm10"), HG19("hg19");
+		
+		private String name;
+		
+		Precomputed(String name) {this.name = name;}
+		
+		public static String commaSeparatedString = Arrays.asList(values()).stream().map(c -> c.toString()).collect(Collectors.joining(", "));
+		
+		public String toString() {return name;}
+		
+		public static Precomputed fromString(String genomeName) {
+			for(Precomputed p : values()) {
+				if(p.toString().equals(genomeName)) return p;
+			}
+			throw new IllegalArgumentException("Supported genome names: " + commaSeparatedString);
+		}
+		
+	}
+	
+	/**
+	 * Get a coordinate space by passing an assembly name
+	 * @param assembly Assembly e.g. "mm10"
+	 * @return The coordinate space for the assembly
+	 */
+	public static CoordinateSpace forGenome(String assembly) {
+		if(assembly.equals(Precomputed.MM9.toString())) return MM9;
+		else if(assembly.equals(Precomputed.MM10.toString())) return MM10;
+		else if(assembly.equals(Precomputed.HG19.toString())) return HG19;
+		else throw new IllegalArgumentException("Assembly " + assembly + " not supported. Options: " + Precomputed.commaSeparatedString);
+	}
 	
 	/**
 	 * Description of reference sequences in this coordinate space
