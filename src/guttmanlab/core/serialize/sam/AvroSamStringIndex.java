@@ -1,6 +1,6 @@
 package guttmanlab.core.serialize.sam;
 
-import guttmanlab.core.annotation.Gene;
+import guttmanlab.core.annotation.BlockedAnnotation;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
 import guttmanlab.core.serialize.AvroIndex;
@@ -16,7 +16,7 @@ import org.apache.avro.generic.GenericRecord;
 public class AvroSamStringIndex implements AvroIndex<String> {
 
 	private AvroStringIndex stringIndex;
-	private AnnotationCollection<Gene> excludeRegions;
+	private AnnotationCollection<? extends BlockedAnnotation> excludeRegions;
 	
 	/**
 	 * @param avroFileName Avro database file
@@ -24,7 +24,7 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 	 * @param indexedFieldName Name of indexed field
 	 * @throws IOException
 	 */
-	public AvroSamStringIndex(String avroFileName, String schemaFile, String indexedFieldName) throws IOException {
+	public AvroSamStringIndex(String avroFileName, String schemaFile, String indexedFieldName) {
 		this(avroFileName, schemaFile, indexedFieldName, null);
 	}
 	
@@ -35,19 +35,24 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 	 * @param regionsToExclude Exclude matches that overlap any of these annotations, or null if not using
 	 * @throws IOException
 	 */
-	public AvroSamStringIndex(String avroFileName, String schemaFile, String indexedFieldName, AnnotationCollection<Gene> regionsToExclude) throws IOException {
-		stringIndex = new AvroStringIndex(avroFileName, schemaFile, indexedFieldName);
+	public AvroSamStringIndex(String avroFileName, String schemaFile, String indexedFieldName, AnnotationCollection<? extends BlockedAnnotation> regionsToExclude) {
+		try {
+			stringIndex = new AvroStringIndex(avroFileName, schemaFile, indexedFieldName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 		excludeRegions = regionsToExclude;
 	}
 
 	@Override
-	public void loadIndex(boolean validate) throws IOException {
+	public void loadIndex(boolean validate) {
 		stringIndex.loadIndex(validate);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public AvroSamRecord seek(String key) throws IOException {
+	public AvroSamRecord seek(String key) {
 		//GenericRecord genericRecord = stringIndex.seek(key);
 		//return new AvroSamRecord(genericRecord);
 		throw new UnsupportedOperationException();
@@ -55,7 +60,7 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<AvroSamRecord> get(String key) throws IOException {
+	public List<AvroSamRecord> get(String key) {
 		List<GenericRecord> genericRecords = stringIndex.get(key);
 		List<AvroSamRecord> rtrn = new ArrayList<AvroSamRecord>();
 		for(GenericRecord record : genericRecords) {
@@ -75,7 +80,7 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 	}
 
 	@Override
-	public long getCurrentFilePosition() throws IOException {
+	public long getCurrentFilePosition() {
 		return stringIndex.getCurrentFilePosition();
 	}
 
@@ -126,17 +131,14 @@ public class AvroSamStringIndex implements AvroIndex<String> {
 	 * @return The set of records with the desired key, minus records with the other attribute contained in the exclusion set
 	 * @throws IOException
 	 */
-	public FeatureCollection<AvroSamRecord> getAsAnnotationCollection(String key, String nameOfAttributeForExclusionSet, Collection<String> attributeValuesToExclude) throws IOException {
+	public FeatureCollection<AvroSamRecord> getAsAnnotationCollection(String key, String nameOfAttributeForExclusionSet, 
+			Collection<String> attributeValuesToExclude) throws IOException {
 		return fromList(get(key, nameOfAttributeForExclusionSet, attributeValuesToExclude));
 	}
 	
 	private static FeatureCollection<AvroSamRecord> fromList(List<AvroSamRecord> list) {
 		FeatureCollection<AvroSamRecord> rtrn = new FeatureCollection<AvroSamRecord>(null);
 		for(AvroSamRecord record : list) {
-			// Skip the record if its mapping quality is too low or not available
-			if(!record.mappingQualityIsOk()) {
-				continue;
-			}
 			rtrn.add(record);
 		}
 		return rtrn;
