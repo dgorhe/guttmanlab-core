@@ -144,8 +144,14 @@ public abstract class AbstractAvroIndex<T extends Comparable<T>> implements Avro
 	 * @return The current position of the reader
 	 * @throws IOException 
 	 */
-	public long getCurrentFilePosition() throws IOException {
-		return reader.tell();
+	public long getCurrentFilePosition() {
+		try {
+			return reader.tell();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+			return -1; // Unreachable
+		}
 	}
 	
 	/**
@@ -170,8 +176,14 @@ public abstract class AbstractAvroIndex<T extends Comparable<T>> implements Avro
 		FileWriter w = new FileWriter(getIndexFileName(inputAvro));
 		// Go to the first sync point
 		dataFileReader.previousSync();
+		String prevName = "";
+		int numDone = 0;
 		while (true) {
 			long pos = dataFileReader.tell();
+			numDone++;
+			if(numDone % 1000 == 0) {
+				logger.info("Finished " + numDone + " sync points. Current position: " + pos);
+			}
 			try {
 				avroRec = dataFileReader.next();
 			} catch(NoSuchElementException e) {
@@ -183,8 +195,15 @@ public abstract class AbstractAvroIndex<T extends Comparable<T>> implements Avro
 				dataFileReader.close();
 				throw new IllegalStateException("Indexed value cannot be null");
 			}
-			w.write(val.toString() + "\t" + pos + "\n");
+			String name = val.toString();
+			if(name.compareTo(prevName) < 0) {
+				w.close();
+				dataFileReader.close();
+				throw new IllegalStateException("Values out of order: " + prevName + " " + name);
+			}
+			w.write(name + "\t" + pos + "\n");
 			dataFileReader.sync(pos);
+			prevName = name;
 		}
 		w.close();
 		long time = (System.nanoTime() - start) / 1000000000;
