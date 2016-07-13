@@ -3,6 +3,8 @@ package guttmanlab.core.pipeline.util;
 import guttmanlab.core.pipeline.LSFJob;
 import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.Scheduler;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,7 +99,7 @@ public class BamUtils {
 		logger.info("");
 		logger.info("Splitting " + inputBam + " into " + numFilesToWrite + " files.");
 		
-		SAMFileReader reader = new SAMFileReader(new File(inputBam));
+		SAMFileReader reader = new net.sf.samtools.SAMFileReader(new File(inputBam));
 		SAMFileHeader header = reader.getFileHeader();
 		
 		Collection<String> rtrn = new ArrayList<String>();
@@ -141,5 +143,59 @@ public class BamUtils {
 		return rtrn;
 		
 	}
+	
+	/**
+	 * Convert SAM file to BAM file
+	 * @param inputSam SAM file to convert
+	 * @param outputBam Output BAM file
+	 */
+	public static void samToBam(File inputSam, File outputBam) {
+		
+		logger.info("Converting SAM to BAM");
+		SamReader samReader = SamReaderFactory.makeDefault().open(inputSam);
+		htsjdk.samtools.SAMFileHeader header = samReader.getFileHeader();
+		htsjdk.samtools.SAMFileWriter writer = new htsjdk.samtools.SAMFileWriterFactory().makeBAMWriter(header, false, outputBam);
+		logger.info("Reading from " + inputSam.getAbsolutePath() + " and writing to " + outputBam.getAbsolutePath());
+		htsjdk.samtools.SAMRecordIterator iter = samReader.iterator();
+		while(iter.hasNext()) {
+			htsjdk.samtools.SAMRecord record = iter.next();
+			writer.addAlignment(record);
+		}
+		writer.close();
+		iter.close();
+		logger.info("Done writing bam.");
+		
+	}
+	
+	/**
+	 * Sort a BAM file
+	 * @param inputBam Input BAM
+	 * @param outputSorted Output sorted BAM
+	 */
+	public static void sortBam(File inputBam, File outputSorted) {
+		
+		logger.info("Sorting BAM file " + inputBam.getAbsolutePath());
+		String[] argv = {"I=" + inputBam.getAbsolutePath(), "O=" + outputSorted.getAbsolutePath(), "SORT_ORDER=coordinate"};
+		new net.sf.picard.sam.SortSam().instanceMain(argv);
+		logger.info("Done sorting BAM file");
+		
+	}
+	
+	
+	/**
+	 * Index BAM file
+	 * @param inputBam Input BAM
+	 */
+	public static void indexBam(File inputBam) {
+		
+		logger.info("Indexing BAM file " + inputBam.getAbsolutePath());
+		String[] argv = {"I=" + inputBam.getAbsolutePath()};
+		new net.sf.picard.sam.BuildBamIndex().instanceMain(argv);
+		logger.info("Done indexing BAM file");
+		
+	}
+	
+	
+	
 
 }
