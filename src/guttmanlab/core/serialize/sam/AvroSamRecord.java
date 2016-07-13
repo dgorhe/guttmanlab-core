@@ -10,12 +10,19 @@ import guttmanlab.core.annotation.predicate.ReadFlag;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.util.SAMFlagDecoder;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMFileHeader;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -24,28 +31,30 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 	private GenericRecord record;
 	private Annotation annotation;
 	private boolean firstReadTranscriptionStrand;
-	public static int MIN_MAPPING_QUALITY = 0;
-	public static int MAX_MAPPING_QUALITY = Integer.MAX_VALUE; // mapq=255 means mapping quality not available
 	
+	/**
+	 * @param genericRecord Record
+	 */
 	public AvroSamRecord(GenericRecord genericRecord) {
 		this(genericRecord, true);
 	}
 	
+	/**
+	 * @param genericRecord Record
+	 * @param firstReadIsTranscriptionStrand True if read1 is 5' to 3', false if read2 is
+	 */
 	public AvroSamRecord(GenericRecord genericRecord, boolean firstReadIsTranscriptionStrand) {
 		
 		// Get basic attributes
 		firstReadTranscriptionStrand = firstReadIsTranscriptionStrand;
 		record = genericRecord;
-		if(!mappingQualityIsOk()) {
-			throw new IllegalStateException("Mapping quality not valid: " + getMappingQuality());
-		}
-		String cigar = getStringAttribute("cigar");
+		String cigar = getStringAttributeOrThrow("cigar");
 		String chr = getReferenceName();
 		int start = getReferenceStartPosition();
 		String name = getName();
 		
 		// Determine strand
-		int flag = getIntAttribute("flag");
+		int flag = getIntAttributeOrThrow("flag");
 		SAMFlagDecoder decoder = new SAMFlagDecoder(flag);
 		boolean isPaired = decoder.templateHasMultipleSegmentsInSequencing();
 		boolean isFirst = decoder.firstSegmentInTemplate();
@@ -72,38 +81,57 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 	}
 	
 	/**
-	 * @param mapq Mapping quality
-	 * @return True iff the mapping quality is at least the minimum and less than 255 (unknown mapq)
+	 * Get the value of a SAM tag
+	 * @param attributeName Tag name
+	 * @return The value of the SAM tag
 	 */
-	private static boolean mappingQualityIsOk(int mapq) {
-		return mapq >= MIN_MAPPING_QUALITY && mapq <= MAX_MAPPING_QUALITY;
-	}
-	
-	/**
-	 * @return True iff the mapping quality is at least the minimum and less than 255 (unknown mapq)
-	 */
-	public boolean mappingQualityIsOk() {
-		return mappingQualityIsOk(getMappingQuality());
-	}
-	
-	/**
-	 * @param record Sam record
-	 * @return True iff the mapping quality is at least the minimum and less than 255 (unknown mapq)
-	 */
-	public static boolean mappingQualityIsOk(SAMRecord record) {
-		return mappingQualityIsOk(record.getMappingQuality());
-	}
-	
 	public Object getAttribute(String attributeName) {
 		return record.get(attributeName);
 	}
 	
-	public String getStringAttribute(String attributeName) {
-		return record.get(attributeName).toString();
+	/**
+	 * Get the value of a string SAM tag or throw an exception if tag is absent
+	 * @param attributeName Tag name
+	 * @return The string value
+	 */
+	public String getStringAttributeOrThrow(String attributeName) {
+		return getStringAttribute(attributeName).orElseThrow(() -> new IllegalArgumentException("Record does not contain attribute: " + attributeName));
 	}
 	
-	public int getIntAttribute(String attributeName) {
-		return (int) record.get(attributeName);
+	/**
+	 * Get the value of a string SAM tag
+	 * @param attributeName Tag name
+	 * @return The string value or empty if tag is absent
+	 */
+	public Optional<String> getStringAttribute(String attributeName) {
+		try {
+			return Optional.of(record.get(attributeName).toString());
+		} catch(NullPointerException e) {
+			return Optional.empty();
+		}
+	}
+	
+	
+	/**
+	 * Get the value of a SAM integer tag or throw an exception if tag is absent
+	 * @param attributeName Tag name
+	 * @return Integer value of the tag
+	 */
+	public int getIntAttributeOrThrow(String attributeName) {
+		return getIntAttribute(attributeName).orElseThrow(() -> new IllegalArgumentException("Record does not contain attribute: " + attributeName)).intValue();
+	}
+	
+	/**
+	 * Get the value of a SAM integer tag
+	 * @param attributeName Tag name
+	 * @return Integer value of the tag or empty if tag is absent
+	 */
+	public Optional<Integer> getIntAttribute(String attributeName) {
+		try {
+			return Optional.of(Integer.valueOf((int) record.get(attributeName)));
+		} catch(NullPointerException e) {
+			return Optional.empty();
+		}
 	}
 
 	@Override
@@ -133,17 +161,17 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 
 	@Override
 	public String getName() {
-		return getStringAttribute("qname");
+		return getStringAttributeOrThrow("qname");
 	}
 
 	@Override
 	public String getReferenceName() {
-		return getStringAttribute("rname");
+		return getStringAttributeOrThrow("rname");
 	}
 
 	@Override
 	public int getReferenceStartPosition() {
-		return getIntAttribute("pos");
+		return getIntAttributeOrThrow("pos");
 	}
 
 	@Override
@@ -193,17 +221,120 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 
 	@Override
 	public int getNumHits() {
-		return getIntAttribute("tagNH");
+		return getIntAttributeOrThrow("tagNH");
 	}
 
 	@Override
 	public int getMappingQuality() {
-		return getIntAttribute("mapq");
+		return getIntAttributeOrThrow("mapq");
 	}
 	
 	@Override
 	public String toString(){
-		return toBED(0,0,0);
+		return toSAM();
+	}
+	
+	private static String toTag(String fieldName) {
+		return fieldName.replaceAll("tag", "");
+	}
+	
+	private Optional<String> toStringTagWithValue(String fieldName) {
+		Optional<String> val = getStringAttribute(fieldName);
+		if(val.isPresent()) return Optional.of(toTag(fieldName) + ":Z:" + val.get());
+		else return Optional.empty();
+	}
+	
+	private Optional<String> toIntTagWithValue(String fieldName) {
+		Optional<Integer> i = getIntAttribute(fieldName);
+		if(i.isPresent()) return Optional.of(toTag(fieldName) + ":i:" + i.get().toString());
+		else return Optional.empty();
+	}
+	
+	/**
+	 * Get the field value as a SAM tag string for SAM format
+	 * @param field The field
+	 * @return SAM tag in format TAG:TYPE:VALUE
+	 */
+	private Optional<String> asTag(Field field) {
+		String fieldName = field.name();
+		switch(field.schema().getType()) {
+		case UNION: // Used for optional tags; union of some type and NULL
+			switch(field.schema()
+					.getTypes() // List<Schema>
+					.stream() // Stream<Schema>
+					.filter(schema -> schema.getType() != Schema.Type.NULL) // Stream<Schema>
+					.collect(Collectors.toList()) // List<Schema>
+					.get(0) // The first non-null field
+					.getType()) { // The type of the first non-null field
+			
+						case STRING:
+							return toStringTagWithValue(fieldName);
+						case INT:
+							return toIntTagWithValue(fieldName);
+						default:
+							throw new IllegalArgumentException("Field type not supported: " + field.schema().getType().getName());
+			}
+			
+		case STRING:
+			return toStringTagWithValue(fieldName);
+		case INT:
+			return toIntTagWithValue(fieldName);
+		default:
+			throw new IllegalArgumentException("Field type not supported: " + field.schema().getType().getName());
+		}
+	}
+	
+	/**
+	 * @return Formatted SAM record
+	 */
+	public String toSAM() {
+		return getStringAttributeOrThrow("qname") + "\t"
+				+ getStringAttributeOrThrow("flag") + "\t"
+				+ getStringAttributeOrThrow("rname") + "\t"
+				+ getStringAttributeOrThrow("pos") + "\t"
+				+ getStringAttributeOrThrow("mapq") + "\t"
+				+ getStringAttributeOrThrow("cigar") + "\t"
+				+ getStringAttributeOrThrow("rnext") + "\t"
+				+ getStringAttributeOrThrow("pnext") + "\t"
+				+ getStringAttributeOrThrow("tlen") + "\t"
+				+ getStringAttributeOrThrow("seq") + "\t"
+				+ getStringAttributeOrThrow("qual") + "\t"
+				+ record
+					.getSchema() // https://avro.apache.org/docs/1.7.6/api/java/org/apache/avro/Schema.html
+					.getFields()
+					.stream()
+					.filter(field -> field.name().startsWith("tag")) // Stream of fields starting with "tag"
+					.map(field -> asTag(field))
+					.filter(opt -> opt.isPresent())
+					.map(opt -> opt.get())
+					.collect(Collectors.joining("\t"));
+	}
+	
+	/**
+	 * Get the records formatted as a SAM file, one record per line
+	 * @param records Stream of records
+	 * @return Formatted SAM records, one per line
+	 */
+	public static String toSAM(Stream<AvroSamRecord> records) {
+		return records.map(record -> record.toSAM()).collect(Collectors.joining("\n"));
+	}
+	
+	/**
+	 * Write records to a SAM file
+	 * @param records Stream of records
+	 * @param header Header to use
+	 * @param outputSam Output sam file to write to
+	 */
+	public static void writeToSAM(Stream<AvroSamRecord> records, SAMFileHeader header, File outputSam) {
+		try {
+			FileWriter writer = new FileWriter(outputSam);
+			writer.write(header.getTextHeader());
+			writer.write(toSAM(records));
+			writer.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 	
 	@Override
