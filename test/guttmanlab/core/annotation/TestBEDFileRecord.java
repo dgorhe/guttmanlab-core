@@ -3,10 +3,19 @@ package guttmanlab.core.annotation;
 import static org.junit.Assert.assertEquals;
 import guttmanlab.core.annotation.Annotation.Strand;
 import guttmanlab.core.annotation.BEDFileRecord.BEDBuilder;
+import guttmanlab.core.annotation.io.BEDFileIO;
+import guttmanlab.core.annotationcollection.AnnotationCollection;
+import guttmanlab.core.annotationcollection.FeatureCollection;
+import guttmanlab.core.coordinatespace.CoordinateSpace;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,19 +39,45 @@ public class TestBEDFileRecord {
 	
 	private static final double EPSILON = 1e-15; // for testing equality of doubles
 	
-	private Annotation simplestAnnot;
-	private BlockedAnnotation complexAnnot;
+	private static Annotation simplestAnnot = new SingleInterval(CHR_1, POS_1, POS_2);
+	private static BlockedAnnotation complexAnnot; // Build in setUp()
+	
+	private static FeatureCollection<BEDFileRecord> refSeqChr1; // All the RefSeq annotations on chr1
+	private static BEDFileRecord geneMinus; // Some gene on the minus strand
+	private static BEDFileRecord genePlus; // Some gene on the plus strand
+
 	
 	@Rule
 	public final ExpectedException parseException = ExpectedException.none();
 	
-	@Before
-	public void setUp() {
-		simplestAnnot = new SingleInterval(CHR_1, POS_1, POS_2);
+	@BeforeClass
+	public static void setUp() {
 
+		// Build complexAnnot
 		complexAnnot = new BlockedAnnotation(NAME_1);
 		complexAnnot.addBlocks(new SingleInterval(CHR_1, POS_1, POS_2, Strand.POSITIVE));
 		complexAnnot.addBlocks(new SingleInterval(CHR_1, POS_3, POS_4, Strand.POSITIVE));
+		
+		// Read RefSeq chr1 annotation
+		File bedFile = new File("test/resources/RefSeq_mm9.chr1.bed");
+		Map<String, FeatureCollection<BEDFileRecord>> genesByReference = null;
+		try {
+			genesByReference = BEDFileIO.loadFromFileByReferenceName(bedFile, CoordinateSpace.MM9);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		refSeqChr1 = genesByReference.get("chr1");
+		
+		// Create geneMinus and genePlus
+		Iterator<BEDFileRecord> iter = refSeqChr1.iterator();
+		iter.hasNext();
+		geneMinus = iter.next();
+		while(iter.hasNext()) {
+			genePlus = iter.next();
+			if(genePlus.getOrientation().equals(Strand.POSITIVE)) break;
+		}
+
 	}
 
 	@Test
@@ -241,5 +276,55 @@ public class TestBEDFileRecord {
 		assertEquals(twelveField.getNumberOfBlocks(), 2);
 		assertEquals(str12, twelveField.toFormattedString(12));
 	}
+	
+	@Test
+	public void testWindowsMinusStrand() {
+		AnnotationCollection<DerivedAnnotation<? extends Annotation>> windows = geneMinus.getWindows(100, 50);
+		assertEquals(71, windows.getNumAnnotations());
+		Iterator<DerivedAnnotation<? extends Annotation>> iter = windows.sortedIterator();
+		iter.hasNext();
+		assertEquals("chr1:3204562-3204662", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:3204612-3204712", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:3204662-3204762", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:3204712-3204812", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:3204762-3204862", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals(Strand.NEGATIVE, iter.next().getOrientation());
+		DerivedAnnotation<? extends Annotation> lastWindow = null;
+		while(iter.hasNext()) {
+			lastWindow = iter.next();
+		}
+		assertEquals("chr1:3661445-3661545", lastWindow.toUCSC());
+	}
+	
+	@Test
+	public void testWindowsPlusStrand() {
+		AnnotationCollection<DerivedAnnotation<? extends Annotation>> windows = genePlus.getWindows(200, 100);
+		assertEquals(23, windows.getNumAnnotations());
+		Iterator<DerivedAnnotation<? extends Annotation>> iter = windows.sortedIterator();
+		iter.hasNext();
+		assertEquals("chr1:4797973-4820360", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:4798545-4822455", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:4820360-4829486", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:4822455-4831053", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals("chr1:4829486-4831153", iter.next().toUCSC());
+		iter.hasNext();
+		assertEquals(Strand.POSITIVE, iter.next().getOrientation());
+		DerivedAnnotation<? extends Annotation> lastWindow = null;
+		while(iter.hasNext()) {
+			lastWindow = iter.next();
+		}
+		assertEquals("chr1:4836583-4836783", lastWindow.toUCSC());
+	}
+	
+
 
 }
