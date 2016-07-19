@@ -24,7 +24,7 @@ public class TestFeatureCollection {
 	@Before
 	public void setUp() {
 		try {
-			fewGenes = (FeatureCollection<BEDFileRecord>) BEDFileIO.loadFromFile(new File("test/resources/iter_ignore_name_test.bed"), CoordinateSpace.MM9);
+			fewGenes = (FeatureCollection<BEDFileRecord>) BEDFileIO.loadFromFile(new File("resources/iter_ignore_name_test.bed"), CoordinateSpace.MM9);
 		} catch(IOException e) {
 			e.printStackTrace();
 			System.exit(-1);

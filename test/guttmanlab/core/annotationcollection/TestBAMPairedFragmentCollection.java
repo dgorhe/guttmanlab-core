@@ -27,8 +27,8 @@ import org.junit.Test;
 
 public class TestBAMPairedFragmentCollection {
 	
-	private static File pairedBam = new File("test/resources/PairedCollectionTest.bam");	
-	private static File chr19bam = new File("test/resources/chr19.clean.sorted.bam");
+	private static File pairedBam = new File("resources/PairedCollectionTest.bam");	
+	private static File chr19bam = new File("resources/chr19.clean.sorted.bam");
 	private static SingleInterval malat1 = new SingleInterval("chr19", 5795689, 5802671, Strand.BOTH, "Malat1");
 	private static AnnotationCollection<BEDFileRecord> refSeqFeatures;	
 
@@ -36,7 +36,7 @@ public class TestBAMPairedFragmentCollection {
 	public static void setUp() throws IOException
 	{
 		BEDFileIO io =  new BEDFileIO(new CoordinateSpace(GenomeSize.MM9));
-		refSeqFeatures = io.loadFromFile(new File("test/resources/RefSeq_mm9.bed"));
+		refSeqFeatures = io.loadFromFile(new File("resources/RefSeq_mm9.bed"));
 	}
 
 	@Test

@@ -59,7 +59,7 @@ public class TestBEDFileRecord {
 		complexAnnot.addBlocks(new SingleInterval(CHR_1, POS_3, POS_4, Strand.POSITIVE));
 		
 		// Read RefSeq chr1 annotation
-		File bedFile = new File("test/resources/RefSeq_mm9.chr1.bed");
+		File bedFile = new File("resources/RefSeq_mm9.chr1.bed");
 		Map<String, FeatureCollection<BEDFileRecord>> genesByReference = null;
 		try {
 			genesByReference = BEDFileIO.loadFromFileByReferenceName(bedFile, CoordinateSpace.MM9);

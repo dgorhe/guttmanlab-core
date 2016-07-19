@@ -13,8 +13,8 @@ import org.junit.Test;
 
 public class TestBAMFragmentCollectionFactory {
 	
-	private static File singleBam = new File("test/resources/SingleCollectionTest.bam");
-	private static File pairedBam = new File("test/resources/PairedCollectionTest.bam");	
+	private static File singleBam = new File("resources/SingleCollectionTest.bam");
+	private static File pairedBam = new File("resources/PairedCollectionTest.bam");	
 
 	@Test
 	public void testSingleDetection() {

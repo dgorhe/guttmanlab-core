@@ -19,13 +19,13 @@ public class TestNameIgnoringIterator {
 	
 	private static final CoordinateSpace refSpace = CoordinateSpace.MM9;
 	
-	private static final File bedFile = new File("test/resources/iter_ignore_name_test.bed");
+	private static final File bedFile = new File("resources/iter_ignore_name_test.bed");
 	private static AnnotationCollection<BEDFileRecord> genes;
 	
-	private static final File singleEndBamFileSorted = new File("test/resources/SingleCollectionTest_iter_ignore_name.sorted.bam");
-	private static final File pairedEndBamFileSorted = new File("test/resources/PairedCollectionTest_iter_ignore_name.sorted.bam");
-	private static final File singleEndBamFileUnsorted = new File("test/resources/SingleCollectionTest_iter_ignore_name.unsorted.bam");
-	private static final File pairedEndBamFileUnsorted = new File("test/resources/PairedCollectionTest_iter_ignore_name.unsorted.bam");
+	private static final File singleEndBamFileSorted = new File("resources/SingleCollectionTest_iter_ignore_name.sorted.bam");
+	private static final File pairedEndBamFileSorted = new File("resources/PairedCollectionTest_iter_ignore_name.sorted.bam");
+	private static final File singleEndBamFileUnsorted = new File("resources/SingleCollectionTest_iter_ignore_name.unsorted.bam");
+	private static final File pairedEndBamFileUnsorted = new File("resources/PairedCollectionTest_iter_ignore_name.unsorted.bam");
 	private AnnotationCollection<? extends MappedFragment> singleReadsSorted;
 	private AnnotationCollection<? extends MappedFragment> pairedReadsSorted;
 	private AnnotationCollection<? extends MappedFragment> singleReadsUnsorted;
