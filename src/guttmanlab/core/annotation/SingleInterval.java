@@ -28,6 +28,9 @@ public class SingleInterval implements Annotation{
 	 * @param featureName is the name of this feature
 	 */
 	public SingleInterval(String refName, int start, int end, Strand orientation, String featureName){
+		if(start >= end) throw new IllegalArgumentException("Start must be < end");
+		if(start < 0 || end <= 0) throw new IllegalArgumentException("Endpoints must be >= 0");
+		if(orientation == Strand.INVALID) throw new IllegalArgumentException("Strand cannot be invalid");
 		this.referenceName = refName;
 		this.startPos = start;
 		this.endPos = end;
@@ -130,7 +133,10 @@ public class SingleInterval implements Annotation{
 	@Override
 	//FIXME This should be merged with BlockedAnnotation
 	public int getRelativePositionFrom5PrimeOfFeature(int referenceStart) {
-		if(referenceStart>=this.getReferenceEndPosition() || referenceStart<this.getReferenceStartPosition()){return -1;} //This start position is past the feature
+		if(referenceStart>=this.getReferenceEndPosition() || referenceStart<this.getReferenceStartPosition()){
+			//This start position is past the feature
+			throw new IllegalArgumentException("Position " + referenceStart + " is not contained in the feature");
+		} 
 		int relative=referenceStart-getReferenceStartPosition();
 		if(getOrientation().equals(Strand.NEGATIVE)){
 			relative=size()-relative;
@@ -147,12 +153,13 @@ public class SingleInterval implements Annotation{
 	 * Trims this block to the relative start and end position provided. Preserves the reference name
 	 * and the orientation. SingleIntervals with an orientation of 'unknown', 'both', or 'invalid' are
 	 * trimmed as though they have a positive orientation.
-	 * @param relativeStartPosition is the new start position, relative to the old
-	 * @param relativeEndPosition is the new end position, relative to the old
+	 * @param relativeStartPosition is the new start position, relative to 5' end of the old
+	 * @param relativeEndPosition is the new end position, relative to the 5' end of old
 	 * @return a new SingleInterval with the ends appropriately trimmed
 	 */
-	@Override
-	public SingleInterval trim(int relativeStart, int relativeEnd) {
+	public SingleInterval trimRelative(int relativeStart, int relativeEnd) {
+		if(relativeStart < 0) throw new IllegalArgumentException("Relative start must be nonnegative");
+		if(relativeEnd > size()) throw new IllegalArgumentException("Relative end must be at most feature size");
 		if (getOrientation().equals(Strand.NEGATIVE)) {
 			int newEnd = getReferenceEndPosition() - relativeStart;
 			int newStart = getReferenceEndPosition() - relativeEnd;

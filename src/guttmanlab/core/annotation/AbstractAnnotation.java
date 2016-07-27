@@ -332,7 +332,7 @@ public abstract class AbstractAnnotation implements Annotation {
 				if(featureAnnotation.getReferenceEndPosition()<featureSpaceBlock.getReferenceEndPosition())	{
 					shiftEnd=featureSpaceBlock.getReferenceEndPosition()-featureAnnotation.getReferenceEndPosition();
 				}
-				block=block.trim(shiftStart, featureSpaceBlock.size()-shiftEnd);
+				block=block.trimRelative(shiftStart, featureSpaceBlock.size()-shiftEnd);
 				
 				rtrn.addBlocks(block);
 			}

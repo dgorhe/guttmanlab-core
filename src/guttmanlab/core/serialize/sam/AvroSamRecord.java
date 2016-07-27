@@ -56,9 +56,9 @@ public class AvroSamRecord extends BlockedAnnotation implements GenericRecord, M
 		// Determine strand
 		int flag = getIntAttributeOrThrow("flag");
 		SAMFlagDecoder decoder = new SAMFlagDecoder(flag);
-		boolean isPaired = decoder.templateHasMultipleSegmentsInSequencing();
-		boolean isFirst = decoder.firstSegmentInTemplate();
-		boolean plusStrand = !decoder.seqIsReverseComplemented();
+		boolean isPaired = decoder.readPaired();
+		boolean isFirst = decoder.firstInPair();
+		boolean plusStrand = !decoder.readReverseStrand();
 		Strand strand = null;
 		if(isPaired) {
 			if((firstReadTranscriptionStrand && isFirst) || (!firstReadTranscriptionStrand && !isFirst)) {

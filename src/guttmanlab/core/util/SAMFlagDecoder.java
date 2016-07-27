@@ -37,63 +37,63 @@ public class SAMFlagDecoder {
 	/**
 	 * @return True if there are multiple segments (not single end)
 	 */
-	public boolean templateHasMultipleSegmentsInSequencing() {
+	public boolean readPaired() {
 		return bitIsTrue(posMultipleSegments);
 	}
 	
 	/**
 	 * @return True if each segment is properly aligned
 	 */
-	public boolean eachSegmentProperlyAligned() {
+	public boolean properPair() {
 		return bitIsTrue(posEachSegmentProperlyAligned);
 	}
 	
 	/**
 	 * @return True if this segment is unmapped
 	 */
-	public boolean segmentUnmapped() {
+	public boolean readUnmapped() {
 		return bitIsTrue(posSegmentUnmapped);
 	}
 	
 	/**
 	 * @return True if next segment in template is unmapped
 	 */
-	public boolean nextSegmentInTemplateUnmapped() {
+	public boolean mateUnmapped() {
 		return bitIsTrue(posNextSegmentInTemplateUnmapped);
 	}
 	
 	/**
 	 * @return True if this segment is mapped to minus strand
 	 */
-	public boolean seqIsReverseComplemented() {
+	public boolean readReverseStrand() {
 		return bitIsTrue(posSeqReverseComplemented);
 	}
 	
 	/**
 	 * @return True if next segment in template is mapped to minus strand
 	 */
-	public boolean seqOfNextSegmentInTemplateIsReverseComplemented() {
+	public boolean mateReverseStrand() {
 		return bitIsTrue(posSeqOfNextSegmentInTemplateReversed);
 	}
 	
 	/**
 	 * @return True if this is the first segment in template
 	 */
-	public boolean firstSegmentInTemplate() {
+	public boolean firstInPair() {
 		return bitIsTrue(posFirstSegmentInTemplate);
 	}
 	
 	/**
 	 * @return True if this is the last segment in template
 	 */
-	public boolean lastSegmentInTemplate() {
+	public boolean secondInPair() {
 		return bitIsTrue(posLastSegmentInTemplate);
 	}
 	
 	/**
 	 * @return True if this is not the primary alignment
 	 */
-	public boolean secondaryAlignment() {
+	public boolean notPrimaryAlignment() {
 		return bitIsTrue(posSecondaryAlignment);
 	}
 	
@@ -107,7 +107,7 @@ public class SAMFlagDecoder {
 	/**
 	 * @return True if this mapping does not pass quality controls
 	 */
-	public boolean notPassingQualityControls() {
+	public boolean failsQualityChecks() {
 		return bitIsTrue(posNotPassingQualityControls);
 	}
 	
