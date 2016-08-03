@@ -481,8 +481,12 @@ public interface Annotation extends Comparable<Annotation> {
 	}
 	
 	public default int compareToIgnoreName(Annotation other) {
-		int comp = getReferenceName().compareTo(other.getReferenceName());
-		if(comp!=0){return comp;}
+		int comp;
+		
+		try {
+			comp = getReferenceName().compareTo(other.getReferenceName());
+			if(comp!=0){return comp;}
+		} catch(NullPointerException e) {}
 		
 		//second sort by start coordinate
 		comp=getReferenceStartPosition() - other.getReferenceStartPosition();

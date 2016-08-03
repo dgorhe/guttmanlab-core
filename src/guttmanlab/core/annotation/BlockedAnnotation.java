@@ -90,10 +90,10 @@ public class BlockedAnnotation implements Annotation {
 			started = true;
 		} else {
 			if (!this.referenceName.equalsIgnoreCase(interval.getReferenceName())) {
-				return false;
+				throw new IllegalArgumentException("Can't add block with wrong orientation");
 			}
 			if (!this.orientation.equals(interval.getOrientation())) {
-				return false;
+				throw new IllegalArgumentException("Can't add block with wrong orientation");
 			}
 			this.startPosition = Math.min(startPosition, interval.getReferenceStartPosition());
 			this.endPosition = Math.max(endPosition, interval.getReferenceEndPosition());
@@ -140,12 +140,14 @@ public class BlockedAnnotation implements Annotation {
 
 	@Override
 	public int getReferenceStartPosition() {
-		return this.startPosition;
+		if(started) return this.startPosition;
+		else throw new IllegalStateException("Start position not set");
 	}
 
 	@Override
 	public int getReferenceEndPosition() {
-		return this.endPosition;
+		if(started) return this.endPosition;
+		else throw new IllegalStateException("End position not set");
 	}
 
 	@Override

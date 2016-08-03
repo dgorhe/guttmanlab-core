@@ -1,17 +1,21 @@
 package guttmanlab.core.annotation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 import java.util.Iterator;
 
 import guttmanlab.core.annotation.Annotation.Strand;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class TestBlockedAnnotation {
 	
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
 	private BlockedAnnotation blocked1;
 	private BlockedAnnotation blocked2;
 	private SingleInterval block1;
@@ -36,7 +40,287 @@ public class TestBlockedAnnotation {
 
 	}
 	
-	//@Test //appears orientation is not used by overlaps() 
+	private void checkHashCodeEquals(BlockedAnnotation b1, BlockedAnnotation b2, boolean shouldBeEqual) {
+		boolean eq = b1.equals(b2);
+		String s = (shouldBeEqual ? "Should be equal:" : "Should not be equal:")  + "\n" + b1.toBED() + "\n" + b2.toBED();
+		assertTrue(s, shouldBeEqual == eq);
+		int h1 = b1.hashCode();
+		int h2 = b2.hashCode();
+		if(eq) {
+			assertEquals(h1, h2);
+		} else {
+			assert(h1 != h2);
+		}
+	}
+	
+	@Test
+	public void hashCodeEquals1() {
+		BlockedAnnotation blocked1 = new BlockedAnnotation();
+		BlockedAnnotation blocked2 = new BlockedAnnotation();
+		BlockedAnnotation blocked3 = new BlockedAnnotation();
+	
+		blocked1.addBlocks(block1);
+		blocked1.addBlocks(block2);
+		blocked1.addBlocks(block3);
+		
+		blocked2.addBlocks(block1);
+		blocked2.addBlocks(block2);
+		blocked2.addBlocks(block3);
+		
+		blocked3.addBlocks(block3);
+				
+		assertNotEquals("blocked1 and blocked3 should not be equal.", blocked1, blocked3);
+		assertEquals("blocked1 and blocked2 should be equal.", blocked1, blocked2);
+		assertEquals("blocked3 and block3 should be equal.", block3, blocked3);
+		assertEquals("blocked3 and block3 should have same hash code.", blocked3.hashCode(), block3.hashCode());
+		assertNotEquals("blocked2 and block3 should have different hash codes.", blocked3.hashCode(), blocked2.hashCode());
+	}
+	
+	@Test
+	public void hashCodeEquals2() {
+		
+		BlockedAnnotation b1 = new BlockedAnnotation("b1");
+		BlockedAnnotation b2 = new BlockedAnnotation("b2");
+		BlockedAnnotation b3 = new BlockedAnnotation("b1");
+		checkHashCodeEquals(b1, b2, false);
+		checkHashCodeEquals(b1, b3, true);
+		checkHashCodeEquals(b2, b3, false);
+		b1.setOrientation(Strand.POSITIVE);
+		checkHashCodeEquals(b1, b2, false);
+		checkHashCodeEquals(b1, b3, false);
+	}
+	
+	@Test
+	public void hashCodeEquals3() {
+		
+		BlockedAnnotation b4 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.NEGATIVE), "b4");
+		BlockedAnnotation b5 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.NEGATIVE), "b5");
+		BlockedAnnotation b6 = new BlockedAnnotation(b4, "b6");
+		BlockedAnnotation b7 = new BlockedAnnotation(b6, "b4");
+		checkHashCodeEquals(b4, b5, false);
+		checkHashCodeEquals(b4, b6, false);
+		checkHashCodeEquals(b4, b7, true);
+	}
+	
+	@Test
+	public void hashCodeEquals4() {
+		
+		BlockedAnnotation b8 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.NEGATIVE));
+		b8.addBlocks(new SingleInterval("chr1", 300, 400, Strand.NEGATIVE));
+		BlockedAnnotation b9 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.NEGATIVE));
+		b9.addBlocks(new SingleInterval("chr1", 300, 400, Strand.NEGATIVE));
+		BlockedAnnotation b10 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.UNKNOWN));
+		b10.addBlocks(new SingleInterval("chr1", 300, 400, Strand.UNKNOWN));
+		BlockedAnnotation b11 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.UNKNOWN));
+		b11.addBlocks(new SingleInterval("chr1", 300, 400, Strand.UNKNOWN, "si"));
+		checkHashCodeEquals(b8, b9, true);
+		checkHashCodeEquals(b9, b10, false);
+		checkHashCodeEquals(b10, b11, true);
+	}
+	
+	@Test
+	public void refName() {
+		assertEquals(blocked1.getReferenceName(), "chr1");
+		assertEquals(block3.getReferenceName(), "a1");
+		BlockedAnnotation empty = new BlockedAnnotation();
+		assertNull(empty.getReferenceName());
+		BlockedAnnotation nameOnly = new BlockedAnnotation("name");
+		assertNull(nameOnly.getReferenceName());
+		nameOnly.addBlocks(new SingleInterval("chr1", 100, 200));
+		assertEquals(nameOnly.getReferenceName(), "chr1");
+	}
+	
+	@Test
+	public void numBlocks() {
+		assertEquals(3, blocked1.getNumberOfBlocks());
+		assertEquals(2, blocked2.getNumberOfBlocks());
+		BlockedAnnotation b = new BlockedAnnotation();
+		assertEquals(0, b.getNumberOfBlocks());
+		b.addBlocks(new SingleInterval("chr1", 100, 200));
+		assertEquals(1, b.getNumberOfBlocks());
+		b.addBlocks(new SingleInterval("chr1", 150, 250));
+		assertEquals(1, b.getNumberOfBlocks());
+		b.addBlocks(new SingleInterval("chr1", 300, 400));
+		assertEquals(2, b.getNumberOfBlocks());
+		Annotation b2 = b.intersect(new SingleInterval("chr1", 50, 275));
+		assertEquals(1, b2.getNumberOfBlocks());
+	}
+	
+	@Test
+	public void endpoints() {
+		assertEquals(100, blocked1.getReferenceStartPosition());
+		assertEquals(600, blocked1.getReferenceEndPosition());
+		BlockedAnnotation b = new BlockedAnnotation();
+		b.setOrientation(Strand.NEGATIVE);
+		b.addBlocks(new SingleInterval("chr1", 100, 200));
+		assertEquals(100, b.getReferenceStartPosition());
+		b.addBlocks(new SingleInterval("chr1", 150, 250));
+		assertEquals(250, b.getReferenceEndPosition());
+		b.addBlocks(new SingleInterval("chr1", 300, 400));
+		Annotation b2 = b.intersect(new SingleInterval("chr1", 50, 275));
+		assertEquals(100, b2.getReferenceStartPosition());
+		assertEquals(250, b2.getReferenceEndPosition());
+		Annotation b3 = b.intersect(new SingleInterval("chr1", 125, 350));
+		assertEquals(125, b3.getReferenceStartPosition());
+		assertEquals(350, b3.getReferenceEndPosition());
+	}
+	
+	@Test
+	public void emptyEndpoints() {
+		thrown.expect(NullPointerException.class);
+		BlockedAnnotation b = new BlockedAnnotation();
+		@SuppressWarnings("unused")
+		int s = b.getReferenceStartPosition();
+	}
+	
+	@Test
+	public void illegalAddBlocks1() {
+		thrown.expect(IllegalArgumentException.class);
+		BlockedAnnotation b = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
+		b.addBlocks(new SingleInterval("chr1", 300, 400, Strand.NEGATIVE));
+	}
+	
+	@Test
+	public void illegalAddBlocks2() {
+		thrown.expect(IllegalArgumentException.class);
+		BlockedAnnotation b = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
+		b.addBlocks(new SingleInterval("chr1", 300, 400));
+	}
+	
+	@Test
+	public void illegalAddBlocks3() {
+		thrown.expect(IllegalArgumentException.class);
+		BlockedAnnotation b = new BlockedAnnotation(new SingleInterval("chr1", 100, 200));
+		b.addBlocks(new SingleInterval("chr1", 300, 400, Strand.POSITIVE));
+	}
+	
+	@Test
+	public void illegalAddBlocks4() {
+		thrown.expect(IllegalArgumentException.class);
+		BlockedAnnotation b = new BlockedAnnotation(new SingleInterval("chr1", 100, 200));
+		b.addBlocks(new SingleInterval("chr2", 300, 400));
+	}
+	
+	@Test
+	public void addBlocks() {
+		BlockedAnnotation b = new BlockedAnnotation();
+		assertTrue(b.size() == 0);
+		b.addBlocks(new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
+		assertTrue(1 == b.getNumberOfBlocks());
+		assertTrue(b.size() == 100);
+		b.addBlocks(new BlockedAnnotation(new SingleInterval("chr1", 150, 250, Strand.POSITIVE)));
+		assertEquals(Strand.POSITIVE, b.getOrientation());
+		assertTrue(1 == b.getNumberOfBlocks());
+		assertTrue(b.size() == 150);
+		b.addBlocks(new BlockedAnnotation(new SingleInterval("chr1", 350, 450, Strand.POSITIVE)));
+		assertTrue(2 == b.getNumberOfBlocks());
+		assertTrue(b.size() == 250);
+		BlockedAnnotation b2 = new BlockedAnnotation(new SingleInterval("chr1", 400, 500, Strand.POSITIVE));
+		b2.addBlocks(new SingleInterval("chr1", 600, 700, Strand.POSITIVE));
+		b.addBlocks(b2);
+		assertTrue(3 == b.getNumberOfBlocks());
+		assertTrue(b.size() == 400);
+	}
+	
+	@Test
+	public void getOrientation() {
+		BlockedAnnotation b = new BlockedAnnotation();
+		assertEquals(Strand.UNKNOWN, b.getOrientation());
+		b.setOrientation(Strand.NEGATIVE);
+		assertEquals(Strand.NEGATIVE, b.getOrientation());
+		BlockedAnnotation b2 = new BlockedAnnotation();
+		b2.addBlocks(new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
+		assertEquals(Strand.POSITIVE, b2.getOrientation());
+	}
+	
+	@Test
+	public void emptyConstructor() {
+		BlockedAnnotation b = new BlockedAnnotation();
+		assertNull(b.getName());
+		assertNull(b.getReferenceName());
+		assertEquals(Strand.UNKNOWN, b.getOrientation());
+		assertTrue(0 == b.getNumberOfBlocks());
+		assertEquals(b, new BlockedAnnotation());
+		assertTrue(0 == b.size());
+	}
+	
+	@Test
+	public void emptyConstructorEndpoints1() {
+		thrown.expect(IllegalStateException.class);
+		BlockedAnnotation b = new BlockedAnnotation();
+		@SuppressWarnings("unused")
+		int s = b.getReferenceStartPosition();
+	}
+	
+	@Test
+	public void emptyConstructorEndpoints2() {
+		thrown.expect(IllegalStateException.class);
+		BlockedAnnotation b = new BlockedAnnotation();
+		@SuppressWarnings("unused")
+		int e = b.getReferenceEndPosition();
+	}
+	
+	@Test
+	public void nameOnlyConstructor() {
+		BlockedAnnotation b = new BlockedAnnotation("name");
+		assertEquals("name", b.getName());
+		assertNull(b.getReferenceName());
+		assertEquals(Strand.UNKNOWN, b.getOrientation());
+		assertTrue(0 == b.getNumberOfBlocks());
+		assertEquals(b, new BlockedAnnotation());
+		assertTrue(0 == b.size());
+	}
+	
+	@Test
+	public void nameOnlyConstructorEndpoints1() {
+		thrown.expect(IllegalStateException.class);
+		BlockedAnnotation b = new BlockedAnnotation("name");
+		@SuppressWarnings("unused")
+		int s = b.getReferenceStartPosition();
+	}
+	
+	@Test
+	public void nameOnlyConstructorEndpoints2() {
+		thrown.expect(IllegalStateException.class);
+		BlockedAnnotation b = new BlockedAnnotation("name");
+		@SuppressWarnings("unused")
+		int e = b.getReferenceEndPosition();
+	}
+	
+	@Test
+	public void name() {
+		BlockedAnnotation b = new BlockedAnnotation();
+		assertNull(b.getName());
+		b.addBlocks(new SingleInterval("chr1", 5, 10));
+		assertNull(b.getName());
+		BlockedAnnotation b2 = new BlockedAnnotation("b2");
+		assertEquals("b2", b2.getName());
+		b2.addBlocks(new SingleInterval("chr1", 20, 30));
+		BlockedAnnotation b3 = new BlockedAnnotation(b2);
+		assertEquals("b2", b3.getName());
+		BlockedAnnotation b4 = new BlockedAnnotation(b3, "b4");
+		assertEquals("b4", b4.getName());
+	}
+
+	@Test
+	public void nameIntersect() {
+		BlockedAnnotation b2 = new BlockedAnnotation("b2");
+		assertEquals("b2", b2.getName());
+		b2.addBlocks(new SingleInterval("chr1", 20, 30));
+		Annotation b5 = b2.intersect(new SingleInterval("chr1", 7, 25));
+		assertNull("Name of intersection should be null but is: " + b5.getName() + ".", b5.getName());
+	}
+
+	@Test
+	public void nameTrim() {
+		BlockedAnnotation b2 = new BlockedAnnotation("b2");
+		assertEquals("b2", b2.getName());
+		b2.addBlocks(new SingleInterval("chr1", 20, 30));
+		Annotation b6 = b2.trim(22, 25);
+		assertNull("Name of trimmed annotation should be null but is: " + b6.getName() + ".", b6.getName());
+	}
+
+	@Test //appears orientation is not used by overlaps() 
 	public void annotationsMustHaveCompatibleOrientations() {
 		BlockedAnnotation a1 = new BlockedAnnotation();
 		SingleInterval block1 = new SingleInterval("a1",100,300);
@@ -119,7 +403,60 @@ public class TestBlockedAnnotation {
 		assertEquals("block2 end = 500",500,a3.getReferenceEndPosition());
 	}
 	
-
+	@Test
+	public void getBlocksSeveral() {
+		BlockedAnnotation b = new BlockedAnnotation();
+		b.addBlocks(new SingleInterval("chr1", 100, 200));
+		b.addBlocks(new SingleInterval("chr1", 500, 600));
+		b.addBlocks(new SingleInterval("chr1", 300, 400));
+		b.addBlocks(new SingleInterval("chr1", 450, 550));
+		Iterator<SingleInterval> iter = b.getBlocks();
+		assertEquals(new SingleInterval("chr1", 100, 200), iter.next());
+		assertEquals(new SingleInterval("chr1", 300, 400), iter.next());
+		assertEquals(new SingleInterval("chr1", 450, 600), iter.next());
+		assertTrue(!iter.hasNext());
+	}
+	
+	@Test
+	public void getBlocksName() {
+		BlockedAnnotation b1 = new BlockedAnnotation();
+		Iterator<SingleInterval> i1 = b1.getBlocks();
+		assertTrue(!i1.hasNext());
+		SingleInterval s1 = new SingleInterval("chr1", 100, 200);
+		b1.addBlocks(new SingleInterval(s1, "name"));
+		Iterator<SingleInterval> i2 = b1.getBlocks();
+		SingleInterval in1 = i2.next();
+		assertTrue("Iterator should be empty", !i2.hasNext());
+		assertEquals("Block should not have a name", new SingleInterval("chr1", 100, 200), in1);
+		assertNull("Block should not have a name", in1.getName());
+	}
+	
+	@Test
+	public void getBlocksStrand() {
+		BlockedAnnotation b1 = new BlockedAnnotation();
+		b1.addBlocks(new SingleInterval("chr1", 100, 200, Strand.BOTH));
+		Iterator<SingleInterval> i1 = b1.getBlocks();
+		SingleInterval in1 = i1.next();
+		assertEquals(Strand.BOTH, in1.getOrientation());
+		BlockedAnnotation b2 = new BlockedAnnotation();
+		b2.addBlocks(new SingleInterval("chr1", 100, 200));
+		Iterator<SingleInterval> i2 = b2.getBlocks();
+		SingleInterval in2 = i2.next();
+		assertEquals(Strand.UNKNOWN, in2.getOrientation());
+	}
+	
+	@Test
+	public void size() {
+		BlockedAnnotation b1 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.POSITIVE));
+		BlockedAnnotation b2 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.NEGATIVE));
+		BlockedAnnotation b3 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.UNKNOWN));
+		BlockedAnnotation b4 = new BlockedAnnotation(new SingleInterval("chr1", 100, 200, Strand.BOTH));
+		assertTrue(b1.size() == 100);
+		assertTrue(b2.size() == 100);
+		assertTrue(b3.size() == 100);
+		assertTrue(b4.size() == 100);
+	}
+	
 	@Test
 	public void testSetOrientation() {
 		BlockedAnnotation blocked = new BlockedAnnotation();
@@ -212,29 +549,6 @@ public class TestBlockedAnnotation {
 		assertEquals("Trimming should not affect middle block.", block2, trimmedBlock2);
 	}
 	
-	@Test 
-	public void testHashCodeEquals() {
-		BlockedAnnotation blocked1 = new BlockedAnnotation();
-		BlockedAnnotation blocked2 = new BlockedAnnotation();
-		BlockedAnnotation blocked3 = new BlockedAnnotation();
-	
-		blocked1.addBlocks(block1);
-		blocked1.addBlocks(block2);
-		blocked1.addBlocks(block3);
-		
-		blocked2.addBlocks(block1);
-		blocked2.addBlocks(block2);
-		blocked2.addBlocks(block3);
-		
-		blocked3.addBlocks(block3);
-				
-		assertNotEquals("blocked1 and blocked3 should not be equal.", blocked1, blocked3);
-		assertEquals("blocked1 and blocked2 should be equal.", blocked1, blocked2);
-		assertEquals("blocked3 and block3 should be equal.", block3, blocked3);
-		assertEquals("blocked3 and block3 should have same hash code.", blocked3.hashCode(), block3.hashCode());
-		assertNotEquals("blocked2 and block3 should have different hash codes.", blocked3.hashCode(), blocked2.hashCode());
-	}
-
 	@Test
 	public void testStrand() {
 		Annotation pos1 = new BlockedAnnotation();
@@ -253,9 +567,16 @@ public class TestBlockedAnnotation {
 		Strand negStrand = neg.getOrientation();
 		Strand unknownStrand = unknown.getOrientation();
 		
+		assertEquals(posStrand1, Strand.POSITIVE);
+		assertEquals(negStrand, Strand.NEGATIVE);
+		assertEquals(unknownStrand, Strand.UNKNOWN);
 		assertEquals("Two positive strands should be equal.", posStrand1, posStrand2);
 		assertNotEquals("Two different orientations should be not equal.", posStrand2, negStrand);
 		assertEquals("An annotation with an unset orientation should return Strand.UNKNOWN", unknownStrand, Strand.UNKNOWN);
+		
+		pos1.setOrientation(Strand.BOTH);
+		assertEquals(pos1.getOrientation(), Strand.BOTH);
+		
 	}
 
 	

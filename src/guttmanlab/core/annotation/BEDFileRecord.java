@@ -417,12 +417,6 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 	}
 	
 	@Override
-	public int getRelativePositionFrom5PrimeOfFeature(int referenceStart) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
 	public AnnotationCollection<DerivedAnnotation<? extends Annotation>> getWindows(int windowSize, int stepSize) {
 		// TODO Auto-generated method stub
 		return null;
