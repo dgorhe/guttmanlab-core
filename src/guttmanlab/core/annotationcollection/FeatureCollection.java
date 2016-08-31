@@ -125,9 +125,6 @@ public class FeatureCollection<T extends Annotation> extends AbstractAnnotationC
 					noRepresentativeYet.add(new Interval(chr, pos, pos + intervalLength));
 					addedChr = true;
 				}
-				if(!addedChr) {
-					logger.warn("Not indexing chromosome " + chr + ": too short (" + chrLen + " < " + INDEX_INTERVAL_LENGTH + ")");
-				}
 			}
 		}
 		
@@ -397,6 +394,17 @@ public class FeatureCollection<T extends Annotation> extends AbstractAnnotationC
 			if(annot.overlaps(other)) return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Get all features in this collection that overlap another feature
+	 * @param other Other feature
+	 * @return Collection of overlappers from this collection
+	 */
+	public FeatureCollection<T> overlappers(Annotation other) {
+		FeatureCollection<T> rtrn = new FeatureCollection<T>(referenceCoordinateSpace);
+		index.getSupersetOfOverlappers(other).forEach(t -> {if(t.overlaps(other)) rtrn.add(t);});
+		return rtrn;
 	}
 	
 	@Override
