@@ -48,8 +48,6 @@ public class TestBlockedAnnotation {
 		int h2 = b2.hashCode();
 		if(eq) {
 			assertEquals(h1, h2);
-		} else {
-			assert(h1 != h2);
 		}
 	}
 	
