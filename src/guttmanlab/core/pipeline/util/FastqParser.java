@@ -20,28 +20,45 @@ public class FastqParser implements Iterator<FastqSequence>{
 	 * @param fastqFile
 	 * @throws IOException 
 	 */
-			
 	public FastqParser(File fastqFile) throws IOException{
 		this.fastqFile=fastqFile;
 		reader=new BufferedReader(new InputStreamReader(new FileInputStream(fastqFile)));
 		nextLine = reader.readLine();
 	}
 	
+	/**
+	 * Empty constructor. Call before setting the file.
+	 */
 	public FastqParser() {
 		super();
 	}
 	
+	/**
+	 * Set file and start reader
+	 * @param fastqParser The fastq file
+	 * @throws IOException
+	 */
 	public void start(File fastqParser) throws IOException {
 		this.fastqFile = fastqParser;
 		reader=new BufferedReader(new InputStreamReader(new FileInputStream(fastqFile)));
 		nextLine = reader.readLine();
 	}
 	
+	/**
+	 * Set reader to the passed reader and start
+	 * @param br Reader to set
+	 * @throws IOException
+	 */
 	public void start (BufferedReader br) throws IOException {
 		reader=br;
 		nextLine = reader.readLine();
 	}
 	
+	/**
+	 * Convert to fasta format and save to file
+	 * @param save Output file
+	 * @throws IOException
+	 */
 	public void convertToFasta(String save)throws IOException{
 		FileWriter writer=new FileWriter(save);
 	
@@ -65,6 +82,11 @@ public class FastqParser implements Iterator<FastqSequence>{
         writer.close();
 	}
 	
+	/**
+	 * Convert to fasta file where read names just differ by a number in the name
+	 * @param save Output file
+	 * @throws IOException
+	 */
 	public void convertToNumberedFasta(String save)throws IOException{
 		FileWriter writer=new FileWriter(save);
 	
@@ -85,6 +107,12 @@ public class FastqParser implements Iterator<FastqSequence>{
         writer.close();
 	}
 	
+	/**
+	 * Read an entire fastq file into memory
+	 * @param file File
+	 * @return Collection of fastq records in the file
+	 * @throws IOException
+	 */
 	public Collection<FastqSequence> parse(File file)throws IOException{
 		Collection<FastqSequence> rtrn=new ArrayList<FastqSequence>();
 		String nextLine;
@@ -105,17 +133,11 @@ public class FastqParser implements Iterator<FastqSequence>{
         return rtrn;
 	}
 	
-	
-	private String getLastBps(String sequence, int num){
-		return sequence.substring(sequence.toCharArray().length-num);
-	}
-	
-	private String polyN(String letter, int num){
-		String rtrn="";
-		for(int i=0; i<num; i++){rtrn=rtrn+letter;}
-		return rtrn;
-	}
-	
+	/**
+	 * Get all records in the file
+	 * @return Collection of records in the file
+	 * @throws IOException
+	 */
 	public Collection<FastqSequence> getSequences() throws IOException{
 		if(this.sequences!=null){
 		return this.sequences;
@@ -123,6 +145,13 @@ public class FastqParser implements Iterator<FastqSequence>{
 		else{this.sequences=this.parse(fastqFile); return this.sequences;}
 	}
 
+	/**
+	 * Divide into multiple fastq files
+	 * @param save Output prefix
+	 * @param chunkSize Number of records per file
+	 * @return The output files
+	 * @throws IOException
+	 */
 	public File[] writeChunks(String save, int chunkSize) throws IOException {
 		Collection<File> rtrn=new TreeSet<File>();
 		BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream(this.fastqFile)));
@@ -158,6 +187,9 @@ public class FastqParser implements Iterator<FastqSequence>{
 		return files;
 	}
 	
+	/**
+	 * @return Number of records in file
+	 */
 	public int getNumberOfSequences(){
 		if(this.numberOfSeq>0){return this.numberOfSeq;}
 		else{
@@ -200,6 +232,10 @@ public class FastqParser implements Iterator<FastqSequence>{
 		return seq;
 	}
 
+	/**
+	 * Close the reader
+	 * @throws IOException
+	 */
 	public void close() throws IOException{
 		reader.close();
 	}

@@ -10,11 +10,20 @@ public class DerivedAnnotation<T extends Annotation> extends BlockedAnnotation{
 
 	private T parentDerivedFrom;
 	
+	/**
+	 * @param annotation Child annotation
+	 * @param parent Parent
+	 */
 	public DerivedAnnotation(Annotation annotation, T parent){
 		super(annotation);
 		this.parentDerivedFrom=parent;
 	}
 	
+	/**
+	 * @param annotation Child annotation
+	 * @param newName New name for child annotation
+	 * @param parent Parent
+	 */
 	public DerivedAnnotation(Annotation annotation, String newName, T parent){
 		super(annotation, newName);
 		this.parentDerivedFrom=parent;
@@ -26,6 +35,9 @@ public class DerivedAnnotation<T extends Annotation> extends BlockedAnnotation{
 	 */
 	public T getParentAnnotation(){return parentDerivedFrom;}
 	
+	/**
+	 * @return Parent annotation name
+	 */
 	public String getParentName()
 	{
 		return parentDerivedFrom.getName();

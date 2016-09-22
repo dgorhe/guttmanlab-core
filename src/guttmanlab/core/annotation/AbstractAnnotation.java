@@ -425,10 +425,21 @@ public abstract class AbstractAnnotation implements Annotation {
 	}
 	
 	
+	/**
+	 * Compare to an annotation
+	 * @param b Other annotation
+	 * @return Int with sign of comparison
+	 */
 	public int compareToAnnotation(Annotation b) {
 		return compareToAnnotation(b, true);
 	}
 	
+	/**
+	 * Compare to an annotation
+	 * @param b Other annotation
+	 * @param useOrientation Take into account orientation
+	 * @return Int with sign of comparison
+	 */
 	public int compareToAnnotation(Annotation b, boolean useOrientation) {
 		int comp = getReferenceName().compareTo(b.getReferenceName());
 		if(comp!=0){return comp;}

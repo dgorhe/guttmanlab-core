@@ -72,10 +72,16 @@ public class BEDFileRecord extends BlockedAnnotation implements AnnotationFileRe
 		annot.setOrientation(orientation);
 	}
 	
+	/**
+	 * @return Start of thick segment
+	 */
 	public int thickStart() {
 		return thickStart;
 	}
 	
+	/**
+	 * @return End of thick segment
+	 */
 	public int thickEnd() {
 		return thickEnd;
 	}

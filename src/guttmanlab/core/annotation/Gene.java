@@ -15,12 +15,22 @@ public class Gene extends BlockedAnnotation{
 	private int cdsStartPos=NO_CDS;
 	private int cdsEndPos=NO_CDS;
 	
+	/**
+	 * @param blocks Exons
+	 * @param cdsStartPos CDS start
+	 * @param cdsEndPos CDS end
+	 * @param name Gene name
+	 */
 	public Gene(Collection<Annotation> blocks, int cdsStartPos, int cdsEndPos, String name) {
 		super(blocks, name);
 		this.cdsEndPos=cdsEndPos;
 		this.cdsStartPos=cdsStartPos;
 	}
 	
+	/**
+	 * Construct from an annotation
+	 * @param annot Annotation
+	 */
 	public Gene(Annotation annot) {
 		super(annot);
 	}
@@ -121,6 +131,9 @@ public class Gene extends BlockedAnnotation{
 	}
 	
 	//TODO wite tests
+	/**
+	 * @return Introns as single intervals
+	 */
 	public Collection<SingleInterval> getIntronSet()
 	{
 		Collection<SingleInterval> introns = new ArrayList<SingleInterval>();

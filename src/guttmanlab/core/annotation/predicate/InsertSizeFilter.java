@@ -9,6 +9,9 @@ public class InsertSizeFilter<T extends PairedMappedFragment<SAMFragment>> imple
 
 	private int maxSize;
 	
+	/**
+	 * @param maxSize Max insert size between mates
+	 */
 	public InsertSizeFilter(int maxSize){
 		this.maxSize=maxSize;
 	}

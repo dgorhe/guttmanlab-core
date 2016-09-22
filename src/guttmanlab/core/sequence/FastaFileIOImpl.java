@@ -18,6 +18,9 @@ public class FastaFileIOImpl implements FastaFileIO {
 	
 	private static Logger logger = Logger.getLogger(FastaFileIOImpl.class.getName());
 	
+	/**
+	 * Empty constructor
+	 */
 	public FastaFileIOImpl() {}
 	
 	/**

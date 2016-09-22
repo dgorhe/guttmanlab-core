@@ -32,6 +32,9 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 	private Collection<Predicate<T>> filters;
 	private int numAnnotations;
 
+	/**
+	 * Empty constructor
+	 */
 	public AbstractAnnotationCollection(){
 		filters=new ArrayList<Predicate<T>>();
 	}
@@ -42,6 +45,10 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 		numAnnotations = 0;
 	}
 	
+	/**
+	 * Add filters
+	 * @param filters Filters to add
+	 */
 	public void addFilter(Collection<Predicate<PairedMappedFragment<SAMFragment>>> filters) {
 		Iterator<Predicate<PairedMappedFragment<SAMFragment>>> iter = filters.iterator();
 		while(iter.hasNext())

@@ -12,6 +12,9 @@ public class OverlapsFilter<T extends MappedFragment> implements Predicate<T> {
 
 	private Annotation annot;
 	
+	/**
+	 * @param annot Annotation that fragments are required to overlap
+	 */
 	public OverlapsFilter(Annotation annot) {
 		this.annot = annot;
 	}

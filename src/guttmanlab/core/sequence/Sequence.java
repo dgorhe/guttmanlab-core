@@ -17,11 +17,18 @@ public class Sequence {
 	private String sequence;
 	private String name;
 	
+	/**
+	 * @param name Sequence name
+	 * @param seq Nucleotide sequence
+	 */
 	public Sequence(String name, String seq){
 		this.name=name;
 		this.sequence=seq;
 	}
 	
+	/**
+	 * @param seq Nucleotide sequence
+	 */
 	public Sequence(String seq){
 		this.sequence=seq;
 	}
@@ -76,6 +83,9 @@ public class Sequence {
 		return this.sequence;
 	}
 	
+	/**
+	 * @return Sequence name
+	 */
 	public String getName(){
 		return this.name;
 	}

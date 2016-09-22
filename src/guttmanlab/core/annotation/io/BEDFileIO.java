@@ -20,14 +20,26 @@ public class BEDFileIO implements AnnotationFileIO<BEDFileRecord> {
 
 	private CoordinateSpace referenceSpace;
 	
+	/**
+	 * @param referenceSizes Reference coordinate space
+	 */
 	public BEDFileIO(CoordinateSpace referenceSizes) {
 		this.referenceSpace = referenceSizes;
 	}
 	
+	/**
+	 * @param fileName The BED file
+	 */
 	public BEDFileIO(String fileName) {
 		this(new CoordinateSpace(fileName));
 	}
 	
+	/**
+	 * Write features to a file
+	 * @param regions Features to write
+	 * @param outputBedFile Output file
+	 * @throws IOException
+	 */
 	public static void writeToFile(AnnotationCollection<? extends Annotation> regions, File outputBedFile) throws IOException {
 		try (FileWriter w = new FileWriter(outputBedFile)) {
 			Iterator<? extends Annotation> iter = regions.sortedIterator();
@@ -37,6 +49,12 @@ public class BEDFileIO implements AnnotationFileIO<BEDFileRecord> {
 		}
 	}
 	
+	/**
+	 * Write features to a file
+	 * @param regions Features to write
+	 * @param outputBedFile Output file name
+	 * @throws IOException
+	 */
 	public static void writeToFile(AnnotationCollection<? extends Annotation> regions, String outputBedFile) throws IOException {
 		writeToFile(regions, new File(outputBedFile));
 	}

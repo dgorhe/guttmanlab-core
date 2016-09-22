@@ -9,6 +9,9 @@ public class SAMFragmentNumHitsFilter implements Predicate<MappedFragment> {
 
 	private int maxNumHits;
 	
+	/**
+	 * @param maxHits Max number of hits allowed
+	 */
 	public SAMFragmentNumHitsFilter(int maxHits) {
 		maxNumHits = maxHits;
 	}

@@ -13,10 +13,21 @@ public class ContiguousWindow<T extends Annotation> extends SingleInterval imple
 
 	Collection<T> annotations;
 	
+	/**
+	 * @param refName Reference sequence name
+	 * @param start Start position
+	 * @param end End position
+	 */
 	public ContiguousWindow(String refName, int start, int end) {
 		this(refName, start, end, Strand.BOTH);
 	}
 	
+	/**
+	 * @param refName Reference sequence name
+	 * @param start Start position
+	 * @param end End position
+	 * @param orientation Orientation
+	 */
 	public ContiguousWindow(String refName, int start, int end, Strand orientation){
 		super(refName, start, end, orientation);
 		this.annotations=new ArrayList<T>();

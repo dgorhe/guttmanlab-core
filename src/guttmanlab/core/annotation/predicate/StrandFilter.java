@@ -9,6 +9,9 @@ public class StrandFilter<T extends Annotation> implements Predicate<T> {
 
 	Strand feat_dir;
 	
+	/**
+	 * @param f Required strand
+	 */
 	public StrandFilter(Strand f){
 		this.feat_dir = f;
 	}

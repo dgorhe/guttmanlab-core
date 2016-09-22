@@ -23,26 +23,43 @@ public class FilteredIterator<T extends Annotation> implements CloseableIterator
 		StrandFilter<T> sf;
 		public static Logger logger = Logger.getLogger(FilteredIterator.class.getName());
 		
+		/**
+		 * @param iter Unfiltered closeable iterator
+		 * @param filters Filters to apply
+		 */
 		public FilteredIterator(CloseableIterator<T> iter, Collection<Predicate<T>> filters) {
 			this.iter = iter;
 			this.filters = filters;
 		}
 		
+		/**
+		 * @param iter Unfiltered iterator
+		 * @param filter Filter to apply
+		 */
 		public FilteredIterator(CloseableIterator<T> iter, Predicate<T> filter) {
 			this.iter = iter;
 			this.filters = new ArrayList<Predicate<T>>();
 			this.filters.add(filter);
 		}
 		
+		/**
+		 * @param iter Unfiltered iterator
+		 * @param filters Filters to apply
+		 */
 		public FilteredIterator(Iterator<T> iter, Collection<Predicate<T>> filters) {
 			this.iter = new CloseableWrapper(iter);
 			this.filters = filters;
 		}
 		
-		public FilteredIterator(Iterator<T> iter, Collection<Predicate<T>> filters, Strand region) {
+		/**
+		 * @param iter Unfiltered iterator
+		 * @param filters Filters to apply
+		 * @param strand Strand to restrict to
+		 */
+		public FilteredIterator(Iterator<T> iter, Collection<Predicate<T>> filters, Strand strand) {
 			this.iter = new CloseableWrapper(iter);
 			this.filters = filters;
-			this.sf = new StrandFilter<T>(region);
+			this.sf = new StrandFilter<T>(strand);
 			this.filters.add(sf);
 		}
 

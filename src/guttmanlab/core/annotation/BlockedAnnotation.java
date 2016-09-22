@@ -49,12 +49,21 @@ public class BlockedAnnotation implements Annotation {
 		}
 	}
 	
+	/**
+	 * Replicate another annotation
+	 * @param annot Annotation
+	 */
 	public BlockedAnnotation(Annotation annot){
 		this();
 		this.name=annot.getName();
 		addBlocks(annot);
 	}
 	
+	/**
+	 * Keep structure of another annotation and change name
+	 * @param annot Other annotation
+	 * @param newName Name for this
+	 */
 	public BlockedAnnotation(Annotation annot, String newName){
 		this(annot);
 		this.name = newName;
@@ -189,6 +198,11 @@ public class BlockedAnnotation implements Annotation {
 		return relativeSize;
 	}
 	
+	/**
+	 * Convert a genomic interval to an interval within feature coordinates
+	 * @param region Genomic interval
+	 * @return Interval converted to feature coordinates
+	 */
 	public BlockedAnnotation convertToFeatureSpace(SingleInterval region){
 		int featureStart=getRelativePositionFrom5PrimeOfFeature(region.getReferenceStartPosition());
 		int featureEnd=getRelativePositionFrom5PrimeOfFeature(region.getReferenceEndPosition());

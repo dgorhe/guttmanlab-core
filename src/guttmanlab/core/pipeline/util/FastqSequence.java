@@ -10,6 +10,12 @@ public class FastqSequence {
 	String name;
 	String description;
 	
+	/**
+	 * @param name Read name
+	 * @param sequence Read string
+	 * @param description Description string
+	 * @param quality Quality string
+	 */
 	public FastqSequence(String name, String sequence, String description, String quality){
 		this.sequence=sequence;
 		this.quality=quality;
@@ -18,18 +24,44 @@ public class FastqSequence {
 		this.description=description;
 	}
 	
+	/**
+	 * @return Read name
+	 */
 	public String getName(){return this.name;}
+	
+	/**
+	 * @return Read sequence
+	 */
 	public String getSequence(){return this.sequence;}
+	
+	/**
+	 * @return Description string
+	 */
 	public String getDescription() {return this.description;}
 	
+	/**
+	 * Set read name
+	 * @param name New name
+	 */
 	public void setName(String name) {this.name = name;}
+	
+	/**
+	 * Set description
+	 * @param descr New description
+	 */
 	public void setDescription(String descr) {this.description = descr;}
 	
+	@Override
 	public String toString(){
 		String rtrn=name+"\n"+sequence+"\n"+description+"\n"+quality;
 		return rtrn;
 	}
 	
+	/**
+	 * Write to a stream
+	 * @param bw Writer
+	 * @throws IOException
+	 */
 	public void write(BufferedWriter bw) throws IOException{
 		bw.write( (name.startsWith("@") ) ? name : "@" + name );  // TODO: Fix, store name without @, add @ only for writing
 		bw.newLine();
@@ -47,6 +79,11 @@ public class FastqSequence {
 		}
 	}
 	
+	/**
+	 * Remove sequence of a nucleotide from end of read
+	 * @param letter The nucleotide
+	 * @return New record with poly base removed from end
+	 */
 	public FastqSequence trimEnds(char letter){
 		//get the last occurrence of the specified letter starting from the end and remove it from the sequence
 		char[] chars=sequence.toCharArray();
@@ -86,7 +123,11 @@ public class FastqSequence {
 		return new FastqSequence(name, trimmedSequence, description, trimmedQual);
 	}
 	
-	
+	/**
+	 * Remove sequence of a nucleotide from beginning of read
+	 * @param letter The nucleotide
+	 * @return New record with poly base removed from beginning
+	 */
 	public FastqSequence trimBeginning(char letter){
 		//get the last occurrence of the specified letter starting from the end and remove it from the sequence
 		char[] chars=sequence.toCharArray();
@@ -100,6 +141,11 @@ public class FastqSequence {
 		return newSeq;
 	}
 	
+	/**
+	 * Trim beginning of read
+	 * @param n Number of bases to remove
+	 * @return New record with beginning removed
+	 */
 	public FastqSequence trimFirstNBPs(int n){
 		char[] chars=sequence.toCharArray();
 		int startIndex=n;
@@ -110,18 +156,34 @@ public class FastqSequence {
 		return newSeq;
 	}
 	
+	/**
+	 * Get beginning of read sequence
+	 * @param n Number of bases to get
+	 * @return First bases of read sequence
+	 */
 	public String getFirstNBPs(int n){
 		return sequence.substring(0, n);
 	}
 	
+	/**
+	 * @return Read length
+	 */
 	public int getLength(){return sequence.toCharArray().length;}
 
+	/**
+	 * @return Two line fasta record (name, sequence)
+	 */
 	public String toFasta() {
 		String rtrn="";
 		rtrn+=">"+name+"\n"+sequence+"\n";
 		return rtrn;
 	}
 
+	/**
+	 * Get a fasta record with read number in the name instead of fastq record name
+	 * @param readNum Read number to include in name
+	 * @return Two line fasta record (name, sequence)
+	 */
 	public String toFasta(int readNum) {
 		String rtrn="";
 		String name="seq."+readNum+"a";
@@ -129,6 +191,9 @@ public class FastqSequence {
 		return rtrn;
 	}
 
+	/**
+	 * @return Four line fastq record
+	 */
 	public String toFastq() {
 		return this.toString();
 	}
@@ -146,8 +211,16 @@ public class FastqSequence {
 		return false;
 	}
 
+	/**
+	 * @return True iff read is all A's or all T's
+	 */
 	public boolean isPolyA(){return isPolyA(this.sequence);}
 	
+	/**
+	 * Check if first or last part of read is all A's or all T's
+	 * @param polyN Length of part to check
+	 * @return True iff first n bases or last n bases are all A's or all T's
+	 */
 	public boolean isPartialPolyA(int polyN) {
 		String lastNBps=getLastBps(sequence, polyN);
 		String firstNBps=getFirstBps(sequence, polyN);
@@ -164,6 +237,9 @@ public class FastqSequence {
 		return sequence.substring(0, num);
 	}
 
+	/**
+	 * @return New record with runs of A's or T's removed from beginning and end
+	 */
 	public FastqSequence trimPolyA() {
 		FastqSequence s1=this.trimBeginning('T');
 		FastqSequence s2=this.trimBeginning('A');
@@ -180,21 +256,6 @@ public class FastqSequence {
 		if(s3.getLength()==minSize){return s3;}
 		if(s4.getLength()==minSize){return s4;}
 		return s1;
-	}
-
-	public FastqSequence trimLinker(String linkerSeq) {
-		for(int i=0; i<linkerSeq.length(); i++){
-			String linker=linkerSeq.substring(i, linkerSeq.length());
-			String fivePrime=this.sequence.substring(0, linkerSeq.length()-i);
-			if(fivePrime.equalsIgnoreCase(linker)){
-				String seq=this.sequence.substring((linkerSeq.length()-i), this.sequence.length());
-				String qual=this.quality.substring((linkerSeq.length()-i), this.sequence.length());
-				//System.err.println(linkerSeq.length()-i +" match "+fivePrime+" "+linker+" "+this.sequence+" TRIMMED "+seq);
-				FastqSequence fastq=new FastqSequence(name, seq, description, qual);
-				return fastq;
-			}
-		}
-		return this;
 	}
 
 	

@@ -82,6 +82,9 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 		bamFile = reads.getBamFile();
 	}
 	
+	/**
+	 * @return The original bam file
+	 */
 	public File getBamFile() {
 		return bamFile;
 	}
@@ -229,6 +232,9 @@ public class BAMPairedFragmentCollection extends AbstractAnnotationCollection<Pa
 		return reads.getReferenceCoordinateSpace();
 	}
 
+	/**
+	 * @return The SAM header
+	 */
 	public SAMFileHeader getFileHeader() {
 		return reads.getFileHeader();
 	}

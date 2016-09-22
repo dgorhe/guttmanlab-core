@@ -8,6 +8,9 @@ public class MaximumLengthFilter<T extends Annotation> implements Predicate<T>{
 
 	int maxSize;
 	
+	/**
+	 * @param maxSize Maximum feature size
+	 */
 	public MaximumLengthFilter(int maxSize){
 		this.maxSize=maxSize;
 	}

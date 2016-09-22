@@ -22,6 +22,9 @@ public class SAMFragment implements MappedFragment{
 	private Collection<? extends ReadFlag> readFlags;
 	public static String SAM_NUM_HITS_TAG = "NH";
 
+	/**
+	 * @param record SAM record
+	 */
 	public SAMFragment(SAMRecord record){
 		this(record, false);
 	}
@@ -83,6 +86,9 @@ public class SAMFragment implements MappedFragment{
 		return record;
 	}
 	
+	/**
+	 * @return The SAM record
+	 */
 	public SAMRecord getSamRecord(){
 		return record;
 	}
@@ -196,6 +202,9 @@ public class SAMFragment implements MappedFragment{
 		return record.getMateReferenceName();
 	}
 
+	/**
+	 * @return The orientation of the read
+	 */
 	public Strand getReadOrientation() {
 		if(this.getSamRecord().getReadNegativeStrandFlag()){return Strand.NEGATIVE;}
 		return Strand.POSITIVE;

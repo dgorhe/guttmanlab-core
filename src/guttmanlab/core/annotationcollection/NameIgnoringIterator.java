@@ -17,6 +17,11 @@ public class NameIgnoringIterator<T extends Annotation> implements CloseableIter
 		next = sortedIter.next();
 	}
 	
+	/**
+	 * Factory method
+	 * @param annotations Annotation collection
+	 * @return Name ignoring iterator over the collection
+	 */
 	public static <T extends Annotation> NameIgnoringIterator<T> forAnnotations(AnnotationCollection<T> annotations) {
 		return new NameIgnoringIterator<T>(annotations.sortedIterator());
 	}

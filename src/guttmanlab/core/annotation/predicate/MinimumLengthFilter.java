@@ -8,6 +8,9 @@ public class MinimumLengthFilter<T extends Annotation> implements Predicate<T>{
 
 	int minSize;
 	
+	/**
+	 * @param minSize Minimum feature size
+	 */
 	public MinimumLengthFilter(int minSize){
 		this.minSize=minSize;
 	}

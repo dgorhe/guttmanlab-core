@@ -73,10 +73,17 @@ public class CoordinateSpace {
 		this.refSizes=getRefSeqLengthsFromTable(referenceSizesFile);
 	}
 
+	/**
+	 * @param sizes Map of reference name to reference size
+	 */
 	public CoordinateSpace(Map<String, Integer> sizes){
 		this.refSizes=sizes;
 	}
 	
+	/**
+	 * Create from the reference dictionary in a SAM header
+	 * @param fileHeader SAM header
+	 */
 	public CoordinateSpace(SAMFileHeader fileHeader) {
 		this.refSizes=getRefSeqLengthsFromSamHeader(fileHeader);
 	}

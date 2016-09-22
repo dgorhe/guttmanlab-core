@@ -12,6 +12,9 @@ public class ContainedByFilter<T extends MappedFragment> implements Predicate<T>
 
 	private Annotation annot;
 	
+	/**
+	 * @param annot Annotation that fragments are required to be contained in
+	 */
 	public ContainedByFilter(Annotation annot) {
 		this.annot = annot;
 	}

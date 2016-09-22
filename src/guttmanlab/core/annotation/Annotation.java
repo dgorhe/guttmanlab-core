@@ -296,7 +296,11 @@ public interface Annotation extends Comparable<Annotation> {
 		return getReferenceName()+":"+getReferenceStartPosition()+"-"+getReferenceEndPosition();
 	}
 	
-	
+	/**
+	 * Convert a region in genomic coordinates to a single interval in feature coordinates of this
+	 * @param region Region in genomic coordinates
+	 * @return Interval representing the span of the region in feature coordinates
+	 */
 	public default Annotation convertToFeatureSpace(Annotation region) {
 		//Ensure that region overlaps feature
 		if(overlaps(region)){
@@ -480,6 +484,11 @@ public interface Annotation extends Comparable<Annotation> {
 		return a;
 	}
 	
+	/**
+	 * Compare without taking into account annotation name
+	 * @param other Annotation to compare to
+	 * @return Sign of comparison
+	 */
 	public default int compareToIgnoreName(Annotation other) {
 		int comp;
 		
@@ -521,9 +530,8 @@ public interface Annotation extends Comparable<Annotation> {
 	}
 	
 	/**
-	 * 
 	 * @param other annotation to be compared with
-	 * @return 
+	 * @return Sign of comparison
 	 */
 	public default int compareTo(Annotation other) {
 		

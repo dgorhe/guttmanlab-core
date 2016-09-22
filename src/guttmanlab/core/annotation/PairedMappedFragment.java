@@ -12,10 +12,17 @@ public class PairedMappedFragment<T extends Annotation> implements MappedFragmen
 
 	private Pair<T> pair;
 	
+	/**
+	 * @param v1 Mate 1
+	 * @param v2 Mate 2
+	 */
 	public PairedMappedFragment(T v1, T v2){
 		this(new Pair<T>(v1, v2));
 	}
 	
+	/**
+	 * @param pair The mate pair
+	 */
 	public PairedMappedFragment(Pair<T> pair){
 		this.pair=pair;
 		ensureMatch();

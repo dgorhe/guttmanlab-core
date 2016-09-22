@@ -28,6 +28,12 @@ public class Statistics {
 		return  idxthTerm + reminder*(idxNextthTerm - idxthTerm);
 	}
 	
+	/**
+	 * Get a quantile of a sorted array
+	 * @param vals Sorted values
+	 * @param pct Quantile to get
+	 * @return The value
+	 */
 	public static double quantile(double [] vals, double pct) {
 		if(vals.length == 1) { return vals[0];}
 		if(vals.length == 0) { return 0;}
@@ -39,6 +45,11 @@ public class Statistics {
 		return  idxthTerm + reminder*(idxNextthTerm - idxthTerm);
 	}
 
+	/**
+	 * Get the mean of an array of values
+	 * @param values Values
+	 * @return Mean value
+	 */
 	public static double mean(double [] values) {
 		double total = 0;
 		int counter=0;
@@ -52,6 +63,11 @@ public class Statistics {
 		return total/counter;
 	}
 	
+	/**
+	 * Get the mean of a collection of values
+	 * @param values Values
+	 * @return Mean value
+	 */
 	public static double mean(Collection<? extends Number>  values) {
 		double total = 0;
 		int size = values.size();

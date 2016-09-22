@@ -95,7 +95,10 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		return new FilteredIterator<SAMFragment>(iter, filters, region.getOrientation());
 	}
 		
-	
+	/**
+	 * Write to bam file
+	 * @param fileName Output file
+	 */
 	public void writeToFile(String fileName) {
 		CloseableIterator<SAMFragment> iter= sortedIterator();
 		writeToFile(fileName, iter);
@@ -112,6 +115,11 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		iter.close();
 	}
 	
+	/**
+	 * Write one region to a bam file
+	 * @param fileName Output file
+	 * @param region Region
+	 */
 	public void writeToFile(String fileName, Annotation region) {
 		CloseableIterator<SAMFragment> iter= sortedIterator(region, false);
 		writeToFile(fileName, iter);
@@ -130,6 +138,7 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		return reader.getFileHeader();
 	}
 
+	
 	public PairedMappedFragment<SAMFragment> findReads(SAMFragment fragment) {
 		//TODO A few ideas about how to implement this, simplest, just look up alignment start and alignment end and match names
 		SAMRecordIterator alignment=this.reader.queryAlignmentStart(fragment.getSamRecord().getReferenceName(), fragment.getSamRecord().getAlignmentStart());
@@ -155,6 +164,9 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		return rtrn;
 	}
 	
+	/**
+	 * @return The original bam file
+	 */
 	public File getBamFile() {
 		return bamFile;
 	}

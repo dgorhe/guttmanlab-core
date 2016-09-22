@@ -214,6 +214,9 @@ public class FeatureCollection<T extends Annotation> extends AbstractAnnotationC
 	private static final int INDEX_INTERVAL_LENGTH = 500000;
 	private static Logger logger = Logger.getLogger(FeatureCollection.class.getName());
 	
+	/**
+	 * @param referenceSpace Reference coordinate space
+	 */
 	public FeatureCollection(CoordinateSpace referenceSpace){
 		super();
 		this.referenceCoordinateSpace=referenceSpace;
@@ -243,6 +246,10 @@ public class FeatureCollection<T extends Annotation> extends AbstractAnnotationC
 		return this.featureCount;
 	}
 
+	/**
+	 * Write bed file
+	 * @param fileName Output file
+	 */
 	public void writeToFile(String fileName) {
 		CloseableIterator<T> iter=sortedIterator();
 		try{writeToFile(fileName, iter);}catch(IOException ex){ex.printStackTrace();}
@@ -343,11 +350,6 @@ public class FeatureCollection<T extends Annotation> extends AbstractAnnotationC
 			// TODO Auto-generated method stub
 			//throw new UnsupportedOperationException();
 		}
-	}
-
-	public void writeToFile(String fileName, Annotation region) {
-		try{writeToFile(fileName, sortedIterator(region, false));
-		}catch(IOException ex){ex.printStackTrace();}
 	}
 
 	@Override
