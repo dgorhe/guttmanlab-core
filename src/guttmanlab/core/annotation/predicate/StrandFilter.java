@@ -13,6 +13,8 @@ public class StrandFilter<T extends Annotation> implements Predicate<T> {
 	 * @param f Required strand
 	 */
 	public StrandFilter(Strand f){
+		if(f == Strand.INVALID) throw new IllegalArgumentException("Can't create filter for invalid strand");
+		if(f == Strand.UNKNOWN) throw new IllegalArgumentException("Can't create filter for unknown strand");		
 		this.feat_dir = f;
 	}
 	
