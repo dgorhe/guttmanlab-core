@@ -1,6 +1,9 @@
 package guttmanlab.core.annotation.predicate;
 
 import guttmanlab.core.annotation.Annotation;
+import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BlockedAnnotation;
+import guttmanlab.core.annotation.SingleInterval;
 
 import org.apache.commons.collections15.Predicate;
 
