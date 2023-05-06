@@ -42,13 +42,61 @@ public class MaximumContiguousSubsequence {
     }
 
     
-    public static double[] maxSubSum3(double[] a)
+    public static int maxFromEnd(double[] vals) {
+		//Fix end position and move start
+		double[] sum=new double[vals.length];
+		
+		double sumSoFar=0;
+		for(int i=vals.length-1; i>=0; i--) {
+			sum[i]=sumSoFar+vals[i];
+			//System.err.println(i+" "+sum[i]);
+			sumSoFar=sum[i];
+		}
+		
+		double maxSoFar=-1;
+		int pos=-1;
+		for(int i=0; i<sum.length; i++) {
+			if(sum[i]>maxSoFar) {
+				maxSoFar=sum[i];
+				pos=i;
+			}
+		}
+		
+		return pos;
+	}
+    
+    
+    public static int maxFromStart(double[] vals) {
+		//Fix start position and move end
+		double[] sum=new double[vals.length];
+		
+		double sumSoFar=0;
+		for(int i=0; i<vals.length; i++) {
+			sum[i]=sumSoFar+vals[i];
+			//System.err.println(i+" "+sum[i]);
+			sumSoFar=sum[i];
+		}
+		
+		double maxSoFar=-1;
+		int pos=-1;
+		for(int i=0; i<sum.length; i++) {
+			if(sum[i]>maxSoFar) {
+				maxSoFar=sum[i];
+				pos=i;
+			}
+		}
+		
+		return pos;
+	}
+    
+    
+    public static int[] maxSubSum3(double[] a)
     {
         double maxSum = 0;
         double thisSum = 0;
         
-        double seqStart=0;
-        double seqEnd=-1;
+        int seqStart=0;
+        int seqEnd=-1;
 
         for( int i = 0, j = 0; j < a.length; j++ )
         {
@@ -67,7 +115,7 @@ public class MaximumContiguousSubsequence {
             }
         }
 
-        double[] rtrn={maxSum, seqStart, seqEnd};
+        int[] rtrn={seqStart, seqEnd};
         
         return rtrn;
     }
@@ -94,10 +142,9 @@ public class MaximumContiguousSubsequence {
     
     public static void main( String [ ] args )
     {
-        double a[ ] = {-.05,-.05,-.05,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,1};
-        double[] maxSum = maxSubSum3( a );
-        System.out.println( "Max sum is " + maxSum[0] + "; it goes"
-                       + " from " + maxSum[1] + " to " + maxSum[2] );
+        double a[ ] = {-1,+1,-1,-1,1,1, 1,-1,1,1,-1,-1};
+       int pos = maxFromStart( a );
+        System.out.println(pos);
     }
 
 

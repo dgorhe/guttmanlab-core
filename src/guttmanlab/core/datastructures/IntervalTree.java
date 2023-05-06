@@ -433,7 +433,7 @@ public class IntervalTree<V>
 	 * Find the greatest interval in the tree.
 	 * @return The latest interval, or null if the tree is empty.
 	 */
-	private Node<V> max()
+	public Node<V> max()
 	{
 		Node<V> result = null;
 		Node<V> node = mRoot;
@@ -465,6 +465,9 @@ public class IntervalTree<V>
 		if(result==null){return null;}
 		return result.getValue();
 	}
+	
+	
+	
 
 	/**
 	 * Find the latest interval in the tree less than or equal to the specified interval.
@@ -559,7 +562,7 @@ public class IntervalTree<V>
 	 * @param end The range end.
 	 * @return An iterator.
 	 */
-	private Iterator<Node<V>> overlappers( int start, int end )
+	public Iterator<Node<V>> overlappers( int start, int end )
 	{
 		return new OverlapIterator(start,end);
 	}
@@ -634,6 +637,21 @@ public class IntervalTree<V>
 	public Iterator<V> getNodesBeforeInterval(int start, int end){
 		return new ValuesIterator<V>(reverseIterator(start, end));
 	}
+	
+	public V getValueBeforeInterval(int start, int end){
+		Iterator<V> iter=new ValuesIterator<V>(reverseIterator(start, end));
+		iter.next();
+		return iter.next();
+	}
+	
+	public boolean hasValueBeforeInterval(int start, int end){
+		Iterator<V> iter=new ValuesIterator<V>(reverseIterator(start, end));
+		if(iter.hasNext()) {
+			iter.next();
+			if(iter.hasNext()) {return true;}
+		}
+		return false;
+	}
 
 	/**
 	 * Returns an iterator overall intervals greater than or equal to the specified interval, in order
@@ -644,6 +662,37 @@ public class IntervalTree<V>
 	public Iterator<V> getNodesAfterInterval(int start, int end){
 		return new ValuesIterator<V>(iterator(start, end));
 	}
+	
+	public Node<V> getNodeAfterInterval(int start, int end){
+		Iterator<Node<V>> iter=iterator(start, end);
+		iter.next();
+		return iter.next();
+	}
+	
+	
+	public V getValueAfterInterval(int start, int end){
+		Iterator<V> iter=new ValuesIterator<V>(iterator(start, end));
+		iter.next();
+		return iter.next();
+	}
+	
+	public boolean hasValueAfterInterval(int start, int end){
+		Iterator<V> iter=new ValuesIterator<V>(iterator(start, end));
+		if(iter.hasNext()) {
+			iter.next();
+			if(iter.hasNext()) {return true;}
+		}
+		return false;
+	}
+	
+	
+	public boolean hasNodeAfterInterval(int start, int end){
+		Iterator<Node<V>> iter=iterator(start, end);
+		if(iter.hasNext()){iter.next();}
+		if(iter.hasNext()){return true;}
+		return false;
+	}
+	
 	/**
 	 * Get the special sentinel value that will be used to signal novelty when putting a new interval
 	 * into the tree, or to signal "not found" when removing an interval.  This is null by default.

@@ -1,44 +1,92 @@
 package guttmanlab.core.sequence;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-public class FastaFileIOImpl implements FastaFileIO {
+import guttmanlab.core.annotation.Gene;
+
+public class FastaFileIOImpl {
 	
 	private static Logger logger = Logger.getLogger(FastaFileIOImpl.class.getName());
 	
-	/**
-	 * Empty constructor
-	 */
+	private BufferedReader reader;
+	private String currSeqID;
+	private Sequence currentSequence;
+	private boolean done;
+	
+	
 	public FastaFileIOImpl() {}
+	
+	public FastaFileIOImpl(File file) throws IOException {
+		//currSeqID = null;
+		reader = new BufferedReader(new FileReader(file));
+		String line = reader.readLine();
+		currSeqID=line.substring(1);
+		done=false;
+	}
+	
+	
 	
 	/**
 	 * Read sequences from fasta file and return by name
 	 * @param fileName Input fasta
 	 * @return Map of sequence name to sequence
 	 */
-	public Map<String, Sequence> readFromFileByName(String fileName) {
+	public static Map<String, Sequence> readFromFileByName(String fileName) {
 		Map<String, Sequence> rtrn = new TreeMap<String, Sequence>();
 		Collection<Sequence> seqs = readFromFile(fileName);
 		for(Sequence seq : seqs) {
-			rtrn.put(seq.getName(), seq);
+			rtrn.put(seq.getName().split(" ")[0], seq);
 		}
 		return rtrn;
 	}
 	
-	@Override
-	public Collection<Sequence> readFromFile(String fileName) {
+	
+	public static Map<String, Sequence> readFromFilesByName(File[] files) {
+		Map<String, Sequence> rtrn = new TreeMap<String, Sequence>();
+		
+		for(int i=0; i<files.length; i++) {
+			Collection<Sequence> seqs = readFromFile(files[i].getAbsolutePath());
+			for(Sequence seq : seqs) {
+				rtrn.put(seq.getName().split(" ")[0], seq);
+			}
+
+		}
+		return rtrn;
+	}
+	
+	public static Map<String, Sequence> readFromFilesByName(File[] files, Collection<Gene> genes) {
+		Map<String, Sequence> rtrn = new TreeMap<String, Sequence>();
+		
+		Collection<String> chromosomes=new TreeSet<String>();
+		for(Gene g: genes) {chromosomes.add(g.getReferenceName());}
+		
+		for(int i=0; i<files.length; i++) {
+			String chr=files[i].getName().split("\\.")[0];
+			//System.err.println(chr+" "+files[i].getName());
+			if(chromosomes.contains(chr)) {
+				Collection<Sequence> seqs = readFromFile(files[i].getAbsolutePath());
+				for(Sequence seq : seqs) {
+					rtrn.put(seq.getName().split(" ")[0], seq);
+				}
+			}
+		}
+		return rtrn;
+	}
+	
+
+	public static Collection<Sequence> readFromFile(String fileName) {
 		logger.info("Reading sequences from fasta file " + fileName + "...");
 		Collection<Sequence> rtrn = new ArrayList<Sequence>();
 		try {
@@ -73,55 +121,34 @@ public class FastaFileIOImpl implements FastaFileIO {
 		logger.info("Got " + rtrn.size() + " sequences.");
 		return rtrn;
 	}
-	
 
-	@Override
-	public Iterator<Sequence> iterateThroughFile(String fileName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void writeToFile(Collection<Sequence> seqs, String fileName, int basesPerLine) {
-		BufferedWriter bw;
-		try {
-			bw = new BufferedWriter(new FileWriter(fileName));
-			for(Sequence seq : seqs) {
-				write(seq, bw, basesPerLine);
+	public boolean hasNext() throws IOException {
+		if(done) {return false;}
+		StringBuilder currSeq = new StringBuilder();
+		while(reader.ready()) {
+			String line = reader.readLine();
+			if(line.startsWith(">")) {
+				//Done
+				currentSequence=new Sequence(currSeqID, currSeq.toString());
+				//logger.info("Added " + currSeqID + " " + currSeq.length());
+				currSeqID = line.substring(1);
+				return true;
 			}
-			bw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(-1);
+			else{
+				currSeq.append(line);
+			}	
 		}
+		currentSequence = new Sequence(currSeqID, currSeq.toString());
+		reader.close();
+		done=true;
+		return true;
 	}
 	
-	/**
-	 * Write one sequence to an output stream
-	 * @param seq Sequence
-	 * @param bw Buffered writer
-	 * @param lineLength Bases per line
-	 * @throws IOException
-	 */
-	public static void write(Sequence seq, BufferedWriter bw, int lineLength) throws IOException {
-		
-		StringBuilder sequenceBuilder = new StringBuilder(seq.getSequenceBases());
-		
-		if(seq == null || sequenceBuilder.length() == 0) {
-			return;
-		}
-		if(sequenceBuilder.length() == 0) {
-			return;
-		}
-
-		int currentIndex = 0;
-		bw.write(">" + seq.getName());
-		bw.newLine();
-		while(currentIndex < sequenceBuilder.length()) {
-			int toWrite = Math.min(lineLength, sequenceBuilder.length() - currentIndex) - 1;
-			bw.write(sequenceBuilder.substring(currentIndex, currentIndex + toWrite + 1));
-			bw.newLine();
-			currentIndex = currentIndex + toWrite + 1;
-		}
+	public Sequence next() throws IOException {
+		return this.currentSequence;
 	}
+	
+	
+	
 
 }

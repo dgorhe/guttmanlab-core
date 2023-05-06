@@ -8,21 +8,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class PairedMappedFragment<T extends Annotation> implements MappedFragment{
+public class PairedMappedFragment<T extends Annotation> extends AbstractNamedAnnotation implements MappedFragment{
 
 	private Pair<T> pair;
 	
-	/**
-	 * @param v1 Mate 1
-	 * @param v2 Mate 2
-	 */
 	public PairedMappedFragment(T v1, T v2){
 		this(new Pair<T>(v1, v2));
 	}
 	
-	/**
-	 * @param pair The mate pair
-	 */
 	public PairedMappedFragment(Pair<T> pair){
 		this.pair=pair;
 		ensureMatch();
@@ -118,7 +111,7 @@ public class PairedMappedFragment<T extends Annotation> implements MappedFragmen
 
 	@Override
 	public void setOrientation(Strand orientation) {
-		throw new UnsupportedOperationException("");
+		// Empty method
 	}
 
 	@Override
@@ -137,11 +130,6 @@ public class PairedMappedFragment<T extends Annotation> implements MappedFragmen
 		return null;
 	}
 
-	@Override
-	public AnnotationCollection<DerivedAnnotation<? extends Annotation>> getWindows(
-			int windowSize, int stepSize) {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public int getNumHits() {
@@ -154,26 +142,21 @@ public class PairedMappedFragment<T extends Annotation> implements MappedFragmen
 	}
 
 	@Override
-	public String toString(){
-		return AnnotationHelper.toString(this);
-	}
-	
-	
-	
-	@Override
-	public boolean equals(Object other)
-	{
-		if(!(other instanceof Annotation)) {
-			return false;
-		}
-		return AnnotationHelper.equals(this, (Annotation)other);
-	}
-	
-	@Override
-	public int hashCode()
-	{
-		return AnnotationHelper.hashCode(this);
+	public void setName(String name) {
+		// TODO Auto-generated method stub
+		throw new IllegalStateException("setName() not implemented for PairedMappedFragment");
 	}
 
+	@Override
+	public Annotation trimByRelativePositions(int relativeStart, int relativeEnd) {
+		// TODO Auto-generated method stub
+		throw new IllegalStateException("trimByRelativePositions() not implemented for SAMFragment");
+	}
 
+	public boolean contains(int position) {
+		if(this.getReferenceStartPosition()<position && this.getReferenceEndPosition()>position){return true;}
+		return false;
+	}
+
+	
 }

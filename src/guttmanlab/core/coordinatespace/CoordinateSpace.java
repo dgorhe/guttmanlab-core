@@ -1,18 +1,21 @@
 package guttmanlab.core.coordinatespace;
 
 import guttmanlab.core.annotation.Annotation;
+import guttmanlab.core.annotation.SingleInterval;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMSequenceRecord;
 
 /**
@@ -21,43 +24,6 @@ import net.sf.samtools.SAMSequenceRecord;
  *
  */
 public class CoordinateSpace {
-	
-	public static CoordinateSpace MM9 = new CoordinateSpace(GenomeSize.MM9);
-	public static CoordinateSpace MM10 = new CoordinateSpace(GenomeSize.MM10);
-	public static CoordinateSpace HG19 = new CoordinateSpace(GenomeSize.HG19);
-	
-	private enum Precomputed {
-				
-		MM9("mm9"), MM10("mm10"), HG19("hg19");
-		
-		private String name;
-		
-		Precomputed(String name) {this.name = name;}
-		
-		public static String commaSeparatedString = Arrays.asList(values()).stream().map(c -> c.toString()).collect(Collectors.joining(", "));
-		
-		public String toString() {return name;}
-		
-		public static Precomputed fromString(String genomeName) {
-			for(Precomputed p : values()) {
-				if(p.toString().equals(genomeName)) return p;
-			}
-			throw new IllegalArgumentException("Supported genome names: " + commaSeparatedString);
-		}
-		
-	}
-	
-	/**
-	 * Get a coordinate space by passing an assembly name
-	 * @param assembly Assembly e.g. "mm10"
-	 * @return The coordinate space for the assembly
-	 */
-	public static CoordinateSpace forGenome(String assembly) {
-		if(assembly.equals(Precomputed.MM9.toString())) return MM9;
-		else if(assembly.equals(Precomputed.MM10.toString())) return MM10;
-		else if(assembly.equals(Precomputed.HG19.toString())) return HG19;
-		else throw new IllegalArgumentException("Assembly " + assembly + " not supported. Options: " + Precomputed.commaSeparatedString);
-	}
 	
 	/**
 	 * Description of reference sequences in this coordinate space
@@ -73,17 +39,10 @@ public class CoordinateSpace {
 		this.refSizes=getRefSeqLengthsFromTable(referenceSizesFile);
 	}
 
-	/**
-	 * @param sizes Map of reference name to reference size
-	 */
 	public CoordinateSpace(Map<String, Integer> sizes){
 		this.refSizes=sizes;
 	}
 	
-	/**
-	 * Create from the reference dictionary in a SAM header
-	 * @param fileHeader SAM header
-	 */
 	public CoordinateSpace(SAMFileHeader fileHeader) {
 		this.refSizes=getRefSeqLengthsFromSamHeader(fileHeader);
 	}
@@ -149,7 +108,7 @@ public class CoordinateSpace {
 	 * @param referenceSizesFile Tab-delimited file with reference names (ie chromosomes) and lengths
 	 * @return Map associating each reference name with sequence length
 	 */
-	private Map<String, Integer> getRefSeqLengthsFromTable(String referenceSizesFile) {
+	public static Map<String, Integer> getRefSeqLengthsFromTable(String referenceSizesFile) {
 		Map<String, Integer> rtrn=new TreeMap<String, Integer>();
 		
 		try{	
@@ -183,6 +142,27 @@ public class CoordinateSpace {
 				
 		return header;
 	}
+
+	public List<String> getWindows(int binResolution) {
+		List<String> rtrn=new ArrayList<String>();
+		for(String chr: this.refSizes.keySet()){
+			int length=this.refSizes.get(chr);
+			for(int i=0; i<length; i+=binResolution){
+				SingleInterval region=new SingleInterval(chr, i, i+binResolution);
+				rtrn.add(region.bin(binResolution).toUCSC());
+			}
+		}
+		return rtrn;
+	}
+
+	public void write(String sizes) throws IOException {
+		FileWriter writer=new FileWriter(sizes);
+		for(String refSeq: this.refSizes.keySet()){
+			writer.write(refSeq+"\t"+refSizes.get(refSeq)+"\n");
+		}
+		writer.close();
+	}
+
 	
 	
 	

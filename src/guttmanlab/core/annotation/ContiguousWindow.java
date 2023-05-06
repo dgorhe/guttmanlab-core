@@ -13,21 +13,10 @@ public class ContiguousWindow<T extends Annotation> extends SingleInterval imple
 
 	Collection<T> annotations;
 	
-	/**
-	 * @param refName Reference sequence name
-	 * @param start Start position
-	 * @param end End position
-	 */
 	public ContiguousWindow(String refName, int start, int end) {
 		this(refName, start, end, Strand.BOTH);
 	}
 	
-	/**
-	 * @param refName Reference sequence name
-	 * @param start Start position
-	 * @param end End position
-	 * @param orientation Orientation
-	 */
 	public ContiguousWindow(String refName, int start, int end, Strand orientation){
 		super(refName, start, end, orientation);
 		this.annotations=new ArrayList<T>();
@@ -61,26 +50,12 @@ public class ContiguousWindow<T extends Annotation> extends SingleInterval imple
 	}
 
 	@Override
-	public String toString(){
-		return AnnotationHelper.toString(this);
-	}
-	
-	
-	
-	@Override
-	public boolean equals(Object other)
-	{
-		if(!(other instanceof Annotation)) {
-			return false;
+	public int getNumberOfAnnotationsInWindow(Strand orientation) {
+		int count=0;
+		for(T annotation: annotations){
+			if(annotation.getOrientation().equals(orientation)){count++;}
 		}
-		return AnnotationHelper.equals(this, (Annotation)other);
+		return count;
 	}
-	
-	@Override
-	public int hashCode()
-	{
-		return AnnotationHelper.hashCode(this);
-	}
-
 
 }

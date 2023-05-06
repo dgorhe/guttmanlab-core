@@ -72,11 +72,23 @@ public interface AnnotationCollection<T extends Annotation> {
 	 */
 	public void addFilter(Predicate<T> filter);
 	
+	
+	/**
+	 * Add a filter that will be applied when getting subsets or iterators
+	 * @param filter A predicate that is true if the annotation passes the filter (should be kept)
+	 */
+	public void addFilter(Collection<Predicate<T>> filters);
+	
 	/**
 	 * Get all the filters passed to this class
 	 * @return A collection of all predicate filters
 	 */
 	public Collection<Predicate<T>> getFilters();
+	
+	/**
+	 * Reset the filters in this collection
+	 */
+	public void clearFilters();
 	
 	
 	/**
@@ -157,4 +169,7 @@ public interface AnnotationCollection<T extends Annotation> {
 	 * @return the number of annotations in the collection
 	 */
 	public int getNumAnnotations();
+
+	
+	public Collection<Annotation> toCollection();
 }

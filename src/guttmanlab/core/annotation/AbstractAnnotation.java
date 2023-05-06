@@ -3,14 +3,16 @@ package guttmanlab.core.annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.function.BiFunction;
+import java.util.TreeSet;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMRecord;
+import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotationcollection.AnnotationCollection;
+import guttmanlab.core.annotationcollection.FeatureCollection;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
 
 /**
  * An abstract class that implements many of the shared features of an annotation
@@ -21,185 +23,156 @@ public abstract class AbstractAnnotation implements Annotation {
 	
 	private static Logger logger = Logger.getLogger(AbstractAnnotation.class.getName());
 	
+	@Override
+	public Annotation intersect(Annotation other) {
+		BlockedAnnotation rtrn=new BlockedAnnotation();
+		Iterator<SingleInterval> blocks1=getBlocks();
+		while(blocks1.hasNext()){
+			SingleInterval block1=blocks1.next();
+			Iterator<SingleInterval> blocks2=other.getBlocks();
+			while(blocks2.hasNext()){
+				SingleInterval block2=blocks2.next();
+				SingleInterval inter=intersect(block1, block2);
+				if(inter!=null){rtrn.addBlocks(inter);}
+			}
+			
+		}
+		return rtrn;
+	}
+	
+	@Override
+	public String toBlocks() {
+		String rtrn="";
+		Iterator<SingleInterval> iter=getBlocks();
+		while(iter.hasNext()) {
+			rtrn+=iter.next().toUCSC()+",";
+		}
+		rtrn=rtrn.substring(0, rtrn.length()-1);
+		return rtrn;
+	}
+	
+	
+	
+	
+	@Override
+	public Collection<Annotation> getSplicedWindows(int binSize) {
+		
+		Collection<Annotation> rtrn=new TreeSet<Annotation>();
+		//get relative position of junctions
+		Collection<Integer> junctionPositions=getRelativePositionsOfJunctions();
+		//for each junction make a bin -bin/2 to +/bin/2
+		for(Integer pos: junctionPositions) {
+			Annotation bin=trimByRelativePositions(pos-binSize/2, pos+binSize/2);
+			rtrn.add(bin);
+		}
+		return rtrn;
+	}
+	
+	@Override
+	public Collection<Annotation> getExonIntronJunctionWindows(int binSize) {
+		
+		Collection<Annotation> rtrn=new TreeSet<Annotation>();
+		Collection<Integer> junctionPositions=getAbsolutePositionsOfJunctions();
+		//for each junction make a bin -bin/2 to +/bin/2
+		for(Integer pos: junctionPositions) {
+			Annotation bin=new SingleInterval(getReferenceName(), pos-binSize/2, pos+binSize/2);
+			bin.setOrientation(getOrientation());
+			rtrn.add(bin);
+		}
+		return rtrn;
+	}
+	
+	
+	private Collection<Integer> getAbsolutePositionsOfJunctions() {
+		Collection<Integer> rtrn=new TreeSet<Integer>();
+		Iterator<SingleInterval> iter=this.getBlocks();
+		boolean first=true;
+		while(iter.hasNext()) {
+			SingleInterval block=iter.next();
+			if(!first) {
+				rtrn.add(block.getReferenceStartPosition());
+			}
+			if(iter.hasNext()) {
+				int junction=block.getReferenceEndPosition();
+				rtrn.add(junction);
+			}
+			first=false;
+		}
+		return rtrn;
+	}
+	
+	private Collection<Integer> getRelativePositionsOfJunctions() {
+		Collection<Integer> rtrn=new TreeSet<Integer>();
+		Iterator<SingleInterval> iter=this.getBlocks();
+		while(iter.hasNext()) {
+			SingleInterval block=iter.next();
+			if(iter.hasNext()) {
+				int junction=block.getReferenceEndPosition();
+				int junctionRelative=this.getRelativePositionFrom5PrimeOfFeature(junction);
+				rtrn.add(junctionRelative);
+			}
+		}
+		return rtrn;
+	}
+	
+	public String tobedgraph(double score){
+		return getReferenceName()+"\t"+getReferenceStartPosition()+"\t"+getReferenceEndPosition()+"\t"+score;
+	}
+	
 	/**
-	 * Gets the blocks of this annotation as a collection
+	 * Get blocks as a collection
 	 * @return The set of blocks
 	 */
 	public Collection<Annotation> getBlockSet() {
 		Iterator<SingleInterval> iter = getBlocks();
 		Collection<Annotation> rtrn = new ArrayList<Annotation>();
+		int index=0;
 		while(iter.hasNext()) {
-			rtrn.add(iter.next());
+			SingleInterval exon=iter.next();
+			exon.setName(getName()+"_exon"+index);
+			rtrn.add(exon);
+			index++;
 		}
 		return rtrn;
 	}
+	
+	
+	public int getGenomicLength(){
+		return getReferenceEndPosition()-getReferenceStartPosition();
+	}
 
-	////////////////////
-	// Set operations //
-	////////////////////
-	
 	/**
-	 * Converts this annotation into an array of integers corresponding to the
-	 * start and end coordinates of the blocks. For example, if the annotation
-	 * has two blocks, [3, 10) and [15, 20), the output would be the array
-	 * [3, 10, 15, 20]. Other information, such as reference name and orientation,
-	 * is lost.
-	 * @returns a flattened representation of this annotation
+	 * Helper method to compute the overlap between single blocks
+	 * @param block1 Block1
+	 * @param block2 Block2
+	 * @return The intersection or null if no intersection exists
 	 */
-	public int[] flatten() {
-		int[] endpoints = new int[getNumberOfBlocks() * 2];
-		int idx = 0;
-		Iterator<SingleInterval> thisBlocks = getBlocks();
-		while (thisBlocks.hasNext()) {
-			SingleInterval block = thisBlocks.next();
-			endpoints[idx++] = block.getReferenceStartPosition();
-			endpoints[idx++] = block.getReferenceEndPosition();
-		}
-		return endpoints;
+	private SingleInterval intersect(SingleInterval block1, SingleInterval block2) {
+		if(!overlaps(block1, block2)){return null;}
+		int newStart=Math.max(block1.getReferenceStartPosition(), block2.getReferenceStartPosition());
+		int newEnd=Math.min(block1.getReferenceEndPosition(), block2.getReferenceEndPosition());
+		Strand consensus=Annotation.Strand.consensusStrand(block1.getOrientation(), block2.getOrientation());
+		return new SingleInterval(block1.getReferenceName(), newStart, newEnd, consensus);
 	}
-	
-	/**
-	 * Merges this annotation with another. The type of merging is determined by the
-	 * second parameter, op.
-	 * @param other is the other annotation to merge with this one
-	 * @param op is the function which defines the type of merge. For example, merging
-	 * two annotations to obtain the union will require the argument to be
-	 * (a, b) -> a || b
-	 * @return the annotation resulting from the merge
-	 */
-	public Annotation merge(Annotation other, BiFunction<Boolean, Boolean, Boolean> op) {
-		if (other == null) {
-			return null;
-		}
-		Strand consensus = Strand.consensusStrand(this.getOrientation(), other.getOrientation());
-		if (consensus.equals(Strand.INVALID)) {
-			return null;
-		}
-		if (!getReferenceName().equals(other.getReferenceName())) {
-			return null;
-		}
-		if (getNumberOfBlocks() == 0 || other.getNumberOfBlocks() == 0) {
-			return null;
-		}
-		
-		// Flatten the annotations and add a sentinel value at the end
-		int[] thisFlattened = flatten();
-		int[] otherFlattened = other.flatten();
-		
-		int[] thisEndpoints = new int[thisFlattened.length + 1];
-		for (int i = 0; i < thisFlattened.length; i++) {
-			thisEndpoints[i] = thisFlattened[i];
-		}
-		int[] otherEndpoints = new int[otherFlattened.length + 1];
-		for (int i = 0; i < otherFlattened.length; i++) {
-			otherEndpoints[i] = otherFlattened[i];
-		}
 
-		int sentinel = Math.max(thisEndpoints[thisEndpoints.length - 2],
-								otherEndpoints[otherEndpoints.length - 2]) + 1;
-		thisEndpoints[thisEndpoints.length - 1] = sentinel;
-		otherEndpoints[otherEndpoints.length - 1] = sentinel;
-		
-		// Go through the flattened annotations and at each endpoint, determine whether
-		// it is in the result
-		int thisIdx = 0;
-		int otherIdx = 0;
-		List<Integer> rtrnEndpoints = new ArrayList<Integer>();
-		int scan = Math.min(thisEndpoints[thisIdx], otherEndpoints[otherIdx]);
-		while (scan < sentinel) {
-			boolean in_this = !((scan < thisEndpoints[thisIdx]) ^ (thisIdx % 2 == 1));
-			boolean in_other = !((scan < otherEndpoints[otherIdx]) ^ (otherIdx % 2 == 1));
-			boolean in_result = op.apply(in_this, in_other);
-			
-			if (in_result ^ (rtrnEndpoints.size() % 2 == 1)) {
-				rtrnEndpoints.add(scan);
-			}
-			if (scan == thisEndpoints[thisIdx]) {
-				thisIdx++;
-			}
-			if (scan == otherEndpoints[otherIdx]) {
-				otherIdx++;
-			}
-			scan = Math.min(thisEndpoints[thisIdx], otherEndpoints[otherIdx]);
-		}
-		for (int i = 0; i < rtrnEndpoints.size(); i++) {
-			System.out.println(rtrnEndpoints.get(i));
-		}
-		// Construct the resulting annotation
-		BlockedAnnotation rtrn = new BlockedAnnotation(getReferenceName());
-		for (int i = 0; i < rtrnEndpoints.size(); i += 2) {
-			rtrn.addBlocks(new SingleInterval(getReferenceName(), rtrnEndpoints.get(i), rtrnEndpoints.get(i + 1)));
-		}
-		rtrn.setOrientation(consensus);
-		
-		return rtrn;
-	}
-	
-	@Override
-	public Annotation minus(Annotation other) {
-		return merge(other, (a, b) -> a && !b);
-	}
-	
-	@Override
-	public Annotation union(Annotation other) {
-		return merge(other, (a, b) -> a || b);
-	}
-	
-	@Override
-	public Annotation intersect(Annotation other) {
-		return merge(other, (a, b) -> a && b);
-	}
-	
-	@Override
-	public Annotation xor(Annotation other) {
-		return merge(other, (a, b) -> a ^ b);
-	}
-	
 	@Override
 	public Annotation merge(Annotation other) {
-		if (other == null) {
-			return this;
-		}
-		Strand consensusStrand = Strand.consensusStrand(getOrientation(), other.getOrientation());
-		if (consensusStrand.equals(Strand.INVALID)) {
+		Strand consensusStrand = Annotation.Strand.consensusStrand(getOrientation(), other.getOrientation());
+		if(consensusStrand.equals(Strand.INVALID)) {
 			return null;
 		}
-		BlockedAnnotation rtrn = new BlockedAnnotation();
-		Iterator<SingleInterval> thisBlocks = getBlocks();
-		while (thisBlocks.hasNext()) {
+		BlockedAnnotation rtrn=new BlockedAnnotation();
+		Iterator<SingleInterval> thisBlocks=getBlocks();
+		while(thisBlocks.hasNext()) {
 			rtrn.addBlocks(thisBlocks.next());
 		}
-		Iterator<SingleInterval> otherBlocks = other.getBlocks();
-		while (otherBlocks.hasNext()) {
+		Iterator<SingleInterval> otherBlocks=other.getBlocks();
+		while(otherBlocks.hasNext()) {
 			rtrn.addBlocks(otherBlocks.next());
 		}
 		return rtrn;
 	}
-	
-	@Override
-	public boolean overlaps(Annotation other) {
-		if (other == null) {
-			return false;
-		}
-		Iterator<SingleInterval> blocks1 = getBlocks();
-		while (blocks1.hasNext()) {
-			SingleInterval block1 = blocks1.next();
-			Iterator<SingleInterval> blocks2 = other.getBlocks();
-			while (blocks2.hasNext()){
-				SingleInterval block2 = blocks2.next();
-				if (block1.overlaps(block2)) {
-					return true;
-				}
-			}	
-		}
-		return false;
-	}
 
-	@Override
-	public boolean contains(Annotation other) {
-		return equals(union(other));
-	}
-	
 	protected SingleInterval merge(SingleInterval block1, SingleInterval block2) {
 		if(!overlaps(block1, block2)){return null;}
 		
@@ -207,6 +180,30 @@ public abstract class AbstractAnnotation implements Annotation {
 		int newEnd=Math.max(block1.getReferenceEndPosition(), block2.getReferenceEndPosition());
 		Strand consensus=Annotation.Strand.consensusStrand(block1.getOrientation(), block2.getOrientation());
 		return new SingleInterval(block1.getReferenceName(), newStart, newEnd, consensus);
+	}
+
+	@Override
+	public Annotation minus(Annotation other) {
+		// FIXME Auto-generated method stub
+		throw new UnsupportedOperationException("TODO");
+	}
+	
+	@Override
+	public boolean overlaps(Annotation other) {
+		//TODO This method still needs to be tested to ensure that it does what we expect
+		//Check if the blocks overlap
+		Iterator<SingleInterval> blocks1=getBlocks();
+		while(blocks1.hasNext()){
+			SingleInterval block1=blocks1.next();
+			Iterator<SingleInterval> blocks2=other.getBlocks();
+			while(blocks2.hasNext()){
+				SingleInterval block2=blocks2.next();
+				if(overlaps(block1, block2)){
+					return true;
+				}
+			}	
+		}
+		return false;
 	}
 	
 	/**
@@ -226,35 +223,49 @@ public abstract class AbstractAnnotation implements Annotation {
 		
 		return false;
 	}
+
+	@Override
+	public boolean contains(Annotation other) {
+		// FIXME Auto-generated method stub
+		throw new UnsupportedOperationException("TODO");
+	}
 	
 	@Override
 	public String toString(){
 		return toBED(0,0,0);
 	}
 	
-	@Override
 	public String toBED() {
 		return toBED(0,0,0);
 	}
 	
-	@Override
+	public String toBED(boolean stripChr) {
+		return toBED(0,0,0, 0.0, stripChr);
+	}
+	
 	public String toBED(double score) {
 		return toBED(0,0,0,score);
 	}
 	
-	@Override
 	public String toBED(int r, int g, int b){
 		return toBED(r, g, b, 0.0);
 	}
 	
-	@Override
 	public String toBED(int r, int g, int b, double score){
+		return toBED(r, g, b, 0.0, false);
+	}
+	
+	public String toBED(int r, int g, int b, double score, boolean stripChr){
 		if(r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
 			throw new IllegalArgumentException("RGB values must be between 0 and 255");
 		}
 		String rgb = r + "," + g + "," + b;
 		Iterator<SingleInterval> exons = getBlocks();
-		String rtrn=getReferenceName()+"\t"+getReferenceStartPosition()+"\t"+getReferenceEndPosition()+"\t"+(getName() == null ? toUCSC() : getName())+"\t" + score + "\t"+getOrientation()+"\t"+getReferenceEndPosition()+"\t"+getReferenceEndPosition()+"\t"+rgb+"\t"+getNumberOfBlocks();
+		String chr=getReferenceName();
+		if(stripChr) {
+			chr=getReferenceName().replaceFirst("chr", "");
+		}
+		String rtrn=chr+"\t"+getReferenceStartPosition()+"\t"+getReferenceEndPosition()+"\t"+(getName() == null ? toUCSC() : getName())+"\t" + score + "\t"+getOrientation()+"\t"+getReferenceEndPosition()+"\t"+getReferenceEndPosition()+"\t"+rgb+"\t"+getNumberOfBlocks();
 		String sizes="";
 		String starts="";
 		while(exons.hasNext()){
@@ -266,12 +277,74 @@ public abstract class AbstractAnnotation implements Annotation {
 		return rtrn;
 	}
 
-	@Override
 	public String toUCSC() {
 		return getReferenceName()+":"+getReferenceStartPosition()+"-"+getReferenceEndPosition();
 	}
 	
-	@Override
+	public Collection<Annotation> getIntrons(){
+		Collection<Annotation> rtrn=new TreeSet<Annotation>();
+		Iterator<SingleInterval> blocks=this.getBlocks();
+		SingleInterval previous=null;
+		int counter=0;
+		while(blocks.hasNext()){
+			SingleInterval exon=blocks.next();
+			if(previous!=null){
+				String name=this.getName()+"_intron"+counter;
+				Annotation intron=new SingleInterval(exon.getReferenceName(), previous.getReferenceEndPosition(), exon.getReferenceStartPosition(), exon.getOrientation(), name);
+				rtrn.add(intron);
+			}
+			counter++;
+			previous=exon;
+		}
+		return rtrn;
+	}
+	
+	
+	public Collection<Annotation> getExonIntronPairs(){
+		Collection<Annotation> rtrn=new TreeSet<Annotation>();
+		
+		Iterator<SingleInterval> blocks=this.getBlocks();
+		
+		int index=0;
+		SingleInterval currentExon=blocks.next();
+		while(blocks.hasNext()){
+			SingleInterval nextExon=blocks.next();
+			BlockedAnnotation a=new BlockedAnnotation();
+			a.addBlocks(currentExon);
+			a.addBlocks(nextExon);
+			a.setOrientation(getOrientation());
+			int distance=getDistanceFrom3Prime(a);
+			a.setName(getName()+":j"+index+":di="+distance); //TODO Add distance to 3' end
+			rtrn.add(a);
+			currentExon=nextExon;
+			index++;
+		}
+		
+		return rtrn;
+	}
+	
+	private int getDistanceFrom3Prime(BlockedAnnotation a) {
+		Annotation intron=a.getIntrons().iterator().next();
+		int ss3=intron.getReferenceStartPosition();
+		int transcriptEnd=getReferenceStartPosition();
+		int distance=ss3-transcriptEnd;
+		
+		if(a.getOrientation().equals(Strand.POSITIVE)){
+			ss3=intron.getReferenceEndPosition();
+			transcriptEnd=getReferenceEndPosition();
+			distance=transcriptEnd-ss3;
+		}
+		
+		return distance;
+	}
+
+	public String toUCSC(Strand strand) {
+		return getReferenceName()+":"+getReferenceStartPosition()+"-"+getReferenceEndPosition()+strand;
+	}
+	public String toUCSCStrand() {
+		return getReferenceName()+":"+getReferenceStartPosition()+"-"+getReferenceEndPosition()+getOrientation();
+	}
+	
 	public Annotation convertToFeatureSpace(Annotation region){
 		//Ensure that region overlaps feature
 		if(overlaps(region)){
@@ -306,7 +379,6 @@ public abstract class AbstractAnnotation implements Annotation {
 		return null;
 	}
 	
-	@Override
 	public Annotation convertToReferenceSpace(Annotation featureAnnotation){
 		BlockedAnnotation rtrn=new BlockedAnnotation();
 		Iterator<SingleInterval> blocks = getBlocks();
@@ -332,7 +404,7 @@ public abstract class AbstractAnnotation implements Annotation {
 				if(featureAnnotation.getReferenceEndPosition()<featureSpaceBlock.getReferenceEndPosition())	{
 					shiftEnd=featureSpaceBlock.getReferenceEndPosition()-featureAnnotation.getReferenceEndPosition();
 				}
-				block=block.trimRelative(shiftStart, featureSpaceBlock.size()-shiftEnd);
+				block=block.trim(shiftStart, featureSpaceBlock.size()-shiftEnd);
 				
 				rtrn.addBlocks(block);
 			}
@@ -378,7 +450,6 @@ public abstract class AbstractAnnotation implements Annotation {
 		return record;
 	}
 	
-	@Override
 	public boolean fullyContained(Annotation other){
 		//All blocks in other must be in blocks on this
 		//Go through all blocks2 and check that they are in this
@@ -411,7 +482,6 @@ public abstract class AbstractAnnotation implements Annotation {
 		return false;	
 	}
 	
-	@Override
 	public Annotation trim(int start,int end)
 	{
 		SingleInterval bound = new SingleInterval(this.getReferenceName(),start,end,this.getOrientation());
@@ -425,21 +495,13 @@ public abstract class AbstractAnnotation implements Annotation {
 	}
 	
 	
-	/**
-	 * Compare to an annotation
-	 * @param b Other annotation
-	 * @return Int with sign of comparison
-	 */
 	public int compareToAnnotation(Annotation b) {
 		return compareToAnnotation(b, true);
 	}
 	
-	/**
-	 * Compare to an annotation
-	 * @param b Other annotation
-	 * @param useOrientation Take into account orientation
-	 * @return Int with sign of comparison
-	 */
+	
+	
+	
 	public int compareToAnnotation(Annotation b, boolean useOrientation) {
 		int comp = getReferenceName().compareTo(b.getReferenceName());
 		if(comp!=0){return comp;}
@@ -479,12 +541,8 @@ public abstract class AbstractAnnotation implements Annotation {
 	@Override
 	public boolean equals(Object other)
 	{
-		if (other == null) {
-			return false;
-		}
-		if (other instanceof Annotation) {
-			return this.compareTo((Annotation)other) == 0;
-		}
+		if(other instanceof Annotation)
+			return this.compareToAnnotation((Annotation)other)==0;
 		return false;
 	}
 	
@@ -493,8 +551,71 @@ public abstract class AbstractAnnotation implements Annotation {
 	}
 	
 	@Override
+	public SingleInterval bin(int resolution){
+		int startIndex=getReferenceStartPosition()/resolution;
+		int newStart=startIndex*resolution;
+		int newEnd=newStart+Math.max(getGenomicLength(), resolution);
+		SingleInterval newInterval=new SingleInterval(getReferenceName(), newStart, newEnd);
+		return newInterval;
+	}
+	
+	@Override
 	public int hashCode()
 	{
 		return hashCodeBuilder().toHashCode();
+	}
+	
+	@Override
+	public AnnotationCollection<DerivedAnnotation<? extends Annotation>> getWindows(int windowSize, int stepSize) {
+		
+		FeatureCollection<DerivedAnnotation<? extends Annotation>> rtrn = new FeatureCollection<DerivedAnnotation<? extends Annotation>>(null);
+		
+		boolean plusStrand = getOrientation().equals(Strand.NEGATIVE) ? false : true;
+		int featureStart = plusStrand ? 0 : size() - windowSize;
+		int featureEnd = featureStart + windowSize;
+		
+		while(featureEnd <= size() && featureStart >= 0) {
+			Annotation windowFeatureSpace = new SingleInterval(getName(), featureStart, featureEnd);
+			Annotation windowReferenceSpace = convertToReferenceSpace(windowFeatureSpace);
+			DerivedAnnotation<? extends Annotation> windowDerived = new DerivedAnnotation<BlockedAnnotation>(windowReferenceSpace, 
+					windowReferenceSpace.toUCSC(), new BlockedAnnotation(this));
+			rtrn.add(windowDerived);
+			if(plusStrand) {
+				featureStart += stepSize;
+				featureEnd += stepSize;
+			} else {
+				featureStart -= stepSize;
+				featureEnd -= stepSize;
+			}
+		}
+		
+		return rtrn;
+		
+	}
+	
+	public AnnotationCollection<DerivedAnnotation<? extends Annotation>> getGenomicWindows(int windowSize, int stepSize) {
+		return new SingleInterval(getReferenceName(), getReferenceStartPosition(), getReferenceEndPosition(), getOrientation()).getWindows(windowSize, stepSize);
+	}
+
+	
+	public int get5PrimePosition() {
+		if(getOrientation().equals(Strand.POSITIVE)){
+			return getReferenceStartPosition();
+		}
+		else if(getOrientation().equals(Strand.NEGATIVE)){return getReferenceEndPosition();}
+		throw new IllegalArgumentException("3' position not defined for unstranded annotation: "+getName()+" "+toUCSC());
+	}
+	
+	
+	public SingleInterval getSingleInterval(){
+		return new SingleInterval(getReferenceName(), getReferenceStartPosition(), getReferenceEndPosition(), getOrientation(), getName());
+	}
+	
+	public int get3PrimePosition() {
+		if(getOrientation().equals(Strand.POSITIVE)){
+			return getReferenceEndPosition();
+		}
+		else if(getOrientation().equals(Strand.NEGATIVE)){return getReferenceStartPosition();}
+		throw new IllegalArgumentException("3' position not defined for unstranded annotation: "+getName()+" "+toUCSC());
 	}
 }

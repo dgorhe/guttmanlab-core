@@ -53,7 +53,7 @@ public class FastqSequence {
 	
 	@Override
 	public String toString(){
-		String rtrn=name+"\n"+sequence+"\n"+description+"\n"+quality;
+		String rtrn="@"+name+"\n"+sequence+"\n"+description+"\n"+quality;
 		return rtrn;
 	}
 	

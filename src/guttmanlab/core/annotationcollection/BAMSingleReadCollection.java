@@ -2,103 +2,163 @@ package guttmanlab.core.annotationcollection;
 
 
 import guttmanlab.core.annotation.Annotation;
+import guttmanlab.core.annotation.ContiguousWindow;
 import guttmanlab.core.annotation.PairedMappedFragment;
+import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.SAMFragment;
 import guttmanlab.core.annotation.SingleInterval;
-import guttmanlab.core.annotation.predicate.ContainedByFilter;
-import guttmanlab.core.annotation.predicate.OverlapsFilter;
+import guttmanlab.core.annotation.predicate.StrandFilter;
 import guttmanlab.core.coordinatespace.CoordinateSpace;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.apache.commons.collections15.Predicate;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
-import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
 
 /**
  * This class represents a single-end read collection
+ * @author mguttman
+ *
  */
 public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFragment>{
 
 	private SAMFileReader reader;
 	private CoordinateSpace referenceSpace;
-	private final File bamFile;
+	private String bam;
 	
-	/**
-	 * Constructs a collection of single-read aligned fragments from a BAM file.
-	 * @param bamFile is the BAM file containing the single-read alignments
-	 */
 	public BAMSingleReadCollection(File bamFile){
 		super();
-		this.reader = new SAMFileReader(bamFile);
-		this.referenceSpace = new CoordinateSpace(reader.getFileHeader());
-		this.bamFile = bamFile;
+		this.reader=new SAMFileReader(bamFile);
+		this.referenceSpace=new CoordinateSpace(reader.getFileHeader());
+		this.bam = bamFile.getName();
 	}
 
-	/**
-	 * Constructs a collection of single-read aligned fragments from a BAM file.
-	 * @param bamFilePath is the path of the BAM file containing the single-read alignments
-	 */
-	public BAMSingleReadCollection(String bamFilePath) {
-		this(new File(bamFilePath));
+	public String getBamFile() {
+		return bam;
 	}
 	
-	@Override 
-	public CloseableIterator<SAMFragment> sortedIteratorIgnoreName() {
-		throw new UnsupportedOperationException("This method can't work until sortedIterator() "
-				+ "on this class returns annotations that are sorted according to compareTo(). When that"
-				+ "is fixed, the default implementation in AnnotationCollection will work.");
+	public String toString() {
+		return getBamFile().replaceAll(".bam","");
+	}
+	
+	
+	public void close(){
+		this.reader.close();
 	}
 	
 	@Override
 	public CloseableIterator<SAMFragment> sortedIterator() {
 		return new FilteredIterator<SAMFragment>(new WrappedIterator(reader.iterator()), getFilters());
 	}
-	
+
 	@Override
 	public CloseableIterator<SAMFragment> sortedIterator(Annotation region, boolean fullyContained) {
+		CloseableIteratorChain iter_chain = new CloseableIteratorChain(region);
+		return new FilteredIterator<SAMFragment>(iter_chain, getFilters(),region.getOrientation());
+	}
 
-		// Create the interval hull of `region`. This step is redundant if `region` just has one block.
-		Annotation hull = new SingleInterval(region.getReferenceName(),
-				   region.getReferenceStartPosition(),
-				   region.getReferenceEndPosition(),
-				   region.getOrientation(),
-				   region.getName());
+	@Override
+	public void writeToBAM(String fileName) {
+		throw new IllegalArgumentException("not implemented");
+	}
+
+	@Override
+	public void writeToBAM(String fileName, Annotation region, boolean fullyContained) {
+		throw new IllegalArgumentException("not implemented");
+	}
+
+	public class CloseableIteratorChain implements Iterator<SAMFragment>{
 		
-		// Get the reads that overlap the interval hull. Not all of these reads will necessarily overlap the
-		// original blocked interval.
-		CloseableIterator<SAMFragment> iter = new WrappedIterator(reader.queryOverlapping(hull.getReferenceName(),
-				   												  hull.getReferenceStartPosition() + 1,
-				   												  hull.getReferenceEndPosition()));
+		private CloseableIterator<SAMFragment> currentIterator;
+		private Iterator<SingleInterval> blocks;
+		private Annotation region;
+		private SAMFragment next;
+		private ArrayList<String> splicedReadNames;
 		
-		// Add existing filters. Also add an additional filter depending on 'fullyContained'.
-		// Copy the filters ArrayList(), so we don't add filters to the original.
-		Collection<Predicate<SAMFragment>> filters = new ArrayList<Predicate<SAMFragment>>(getFilters());
-		if (fullyContained) {
-			filters.add(new ContainedByFilter<SAMFragment>(region));
-		} else {
-			filters.add(new OverlapsFilter<SAMFragment>(region));
+		public CloseableIteratorChain(Annotation region)
+		{
+			this.region = region;
+			this.blocks = region.getBlocks();
+			this.currentIterator = null;
+			this.splicedReadNames = new ArrayList<String>();
 		}
 		
-		// TODO Check if we need the StrandFilter provided by the third argument. The overlap/contains methods
-		// might deal with strandedness already.
-		return new FilteredIterator<SAMFragment>(iter, filters, region.getOrientation());
-	}
+		public boolean hasNext(){
+			if(currentIterator == null)
+			{
+				if(blocks.hasNext())
+				{
+					Annotation block = blocks.next();
+					currentIterator = new WrappedIterator(reader.queryOverlapping(region.getReferenceName(), block.getReferenceStartPosition()+1,block.getReferenceEndPosition()));
+					return hasNext();
+				}
+				else //there were no more blocks
+					return false;
+			}
+			else
+			{
+				findNext();
+				if(next!=null)
+				{
+					return true;
+				}
+				else //we've reached the end of the current iterator
+				{
+					currentIterator.close();
+					currentIterator = null;
+					return hasNext();
+				}
+			}
+		}
 		
-	/**
-	 * Write to bam file
-	 * @param fileName Output file
-	 */
+		private void findNext()
+		{
+			if(next==null && currentIterator.hasNext())
+			{
+				SAMFragment n = currentIterator.next();
+				if(n.getNumberOfBlocks()>1)
+				{
+					boolean firstOfPair = n.getSamRecord().getReadPairedFlag() ? n.getSamRecord().getFirstOfPairFlag() : true;
+					String id = ""+n.getName()+firstOfPair;
+					if(!splicedReadNames.contains(id))
+					{
+						this.next = n;
+						splicedReadNames.add(id);
+					}
+					else
+						findNext();
+				}
+				else
+					this.next = n;
+			}
+		}
+		
+		@Override
+		public SAMFragment next() {
+			SAMFragment n = next;
+			this.next = null;
+			return n;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+		
+	//TODO Consider whether to delete
 	public void writeToFile(String fileName) {
 		CloseableIterator<SAMFragment> iter= sortedIterator();
 		writeToFile(fileName, iter);
@@ -115,85 +175,16 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 		iter.close();
 	}
 	
-	/**
-	 * Write one region to a bam file
-	 * @param fileName Output file
-	 * @param region Region
-	 */
 	public void writeToFile(String fileName, Annotation region) {
 		CloseableIterator<SAMFragment> iter= sortedIterator(region, false);
 		writeToFile(fileName, iter);
 	}
-
-	@Override
-	public CoordinateSpace getReferenceCoordinateSpace() {
-		return this.referenceSpace;
-	}
 	
-	/**
-	 * Gets the file header of this collection's BAM file
-	 * @return the file header of this collection's BAM file
-	 */
-	public SAMFileHeader getFileHeader() {
-		return reader.getFileHeader();
-	}
-
-	
-	public PairedMappedFragment<SAMFragment> findReads(SAMFragment fragment) {
-		//TODO A few ideas about how to implement this, simplest, just look up alignment start and alignment end and match names
-		SAMRecordIterator alignment=this.reader.queryAlignmentStart(fragment.getSamRecord().getReferenceName(), fragment.getSamRecord().getAlignmentStart());
-		SAMFragment read1=findRead(alignment, fragment.getName());;
-		
-		SAMRecordIterator mate=this.reader.queryAlignmentStart(fragment.getSamRecord().getReferenceName(), fragment.getSamRecord().getMateAlignmentStart());
-		SAMFragment read2=findRead(mate, fragment.getName());
-		
-		PairedMappedFragment<SAMFragment> rtrn=new PairedMappedFragment<SAMFragment>(read1, read2);
-		return rtrn;
-	}
-
-	private SAMFragment findRead(SAMRecordIterator alignment, String name) {
-		SAMFragment rtrn=null;
-		while(alignment.hasNext()){
-			SAMRecord record=alignment.next();
-			if(record.getReadName().equalsIgnoreCase(name)){
-				rtrn=new SAMFragment(record);
-				break;
-			}
-		}
-		alignment.close();
-		return rtrn;
-	}
-	
-	/**
-	 * @return The original bam file
-	 */
-	public File getBamFile() {
-		return bamFile;
-	}
-	
-	/**
-	 * Gets a String representation of this collection of reads. Currently this is simply the
-	 * basename of the BAM file, e.g., a BAM file "/home/user/test.bam" is represented as
-	 * "test".
-	 */
-	@Override
-	public String toString() {
-		return bamFile.getName().split("\\.(?=[^\\.]+$)")[0];
-	}
-	
-	/**
-	 * A wrapper class for Picard's SAMRecordIterator.
-	 */
 	public class WrappedIterator implements CloseableIterator<SAMFragment>{
 
 		SAMRecordIterator iter;
 		
-		/**
-		 * Constructor which wraps the input SAMRecordIterator.
-		 * @param iter the SAMRecordIterator to wrap
-		 */
 		public WrappedIterator(SAMRecordIterator iter){
-			//iter.assertSorted(SortOrder.coordinate);
 			this.iter=iter;
 		}
 
@@ -218,7 +209,82 @@ public class BAMSingleReadCollection extends AbstractAnnotationCollection<SAMFra
 			iter.close();
 		}
 	}
+
+	@Override
+	public CoordinateSpace getReferenceCoordinateSpace() {
+		return this.referenceSpace;
+	}
 	
+	public SAMFileHeader getFileHeader(){return this.reader.getFileHeader();}
+
+	public PairedMappedFragment<SAMFragment> findReads(SAMFragment fragment) {
+		//TODO A few ideas about how to implement this, simplest, just look up alignment start and alignment end and match names
+		SAMRecordIterator alignment=this.reader.queryAlignmentStart(fragment.getSamRecord().getReferenceName(), fragment.getSamRecord().getAlignmentStart());
+		SAMFragment read1=findRead(alignment, fragment.getName());;
+		
+		SAMRecordIterator mate=this.reader.queryAlignmentStart(fragment.getSamRecord().getReferenceName(), fragment.getSamRecord().getMateAlignmentStart());
+		SAMFragment read2=findRead(mate, fragment.getName());
+		
+		PairedMappedFragment<SAMFragment> rtrn=new PairedMappedFragment<SAMFragment>(read1, read2);
+		return rtrn;
+	}
+
+	private SAMFragment findRead(SAMRecordIterator alignment, String name) {
+		SAMFragment rtrn=null;
+		while(alignment.hasNext()){
+			SAMRecord record=alignment.next();
+			if(record.getReadName().equalsIgnoreCase(name)){
+				rtrn=new SAMFragment(record);
+				break;
+			}
+		}
+		alignment.close();
+		return rtrn;
+	}
+
+	public double getTPM(Annotation gene) {
+		//TPM=rg*rl*10^6/flg xT
+		
+		double rg=this.numOverlappers(gene, true);
+		double flg=gene.size();
+		return rg/flg;
+		
+	}
+
+	/**
+	 * Given a set of regions, compute counts for each
+	 * @param regions
+	 * @return
+	 */
+	public FeatureCollection<SingleInterval> scoreAllWindows(Collection<? extends Annotation> regions) {
+		FeatureCollection<SingleInterval> windowCollection=new FeatureCollection<SingleInterval>();
+		for(Annotation region: regions){
+			SingleInterval window=new SingleInterval(region.getReferenceName(), region.getReferenceStartPosition(), region.getReferenceEndPosition(), region.getOrientation());
+			windowCollection.add(window);
+		}
+		
+		//Iterate over all reads and add to region
+		CloseableIterator<SAMFragment> iter=sortedIterator();
+	
+		while(iter.hasNext()){
+			SAMFragment read=iter.next();
+			addRead(windowCollection.sortedIterator(read, true), read);
+		}
+		
+		iter.close();
+		return windowCollection;
+	}
+	
+
+	private void addRead(CloseableIterator<SingleInterval> iter, SAMFragment read) {
+		while(iter.hasNext()){
+			SingleInterval window=iter.next();
+			window.addCount();
+		}
+		iter.close();
+	}
+	
+
 	/*public BAMSingleReadCollection convert(AnnotationCollection<? extends Annotation> features, boolean fullyContained){
 		//Setup BAM File Writer
 		CoordinateSpace space=features.getFeatureCoordinateSpace();

@@ -43,6 +43,16 @@ public class ConvertedSpace<T extends Annotation> extends AbstractAnnotationColl
 			return new CoordinateConverterIterator<T>();
 	}
 
+	@Override
+	public void writeToBAM(String fileName) {
+		throw new IllegalArgumentException("not implemented");
+	}
+
+	@Override
+	public void writeToBAM(String fileName, Annotation region, boolean fullyContained) {
+		throw new IllegalArgumentException("not implemented");
+	}
+
 	public <X extends Annotation> Collection<DerivedAnnotation<X>> convertCoordinates(X annotation, boolean fullyContained){
 		//Check if annotation is in Reference or Feature space
 		

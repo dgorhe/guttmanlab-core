@@ -8,6 +8,7 @@ import guttmanlab.core.annotation.PopulatedWindow;
 import guttmanlab.core.annotation.SAMFragment;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.Annotation.Strand;
+import guttmanlab.core.annotation.BlockedWindow;
 import guttmanlab.core.coordinatespace.CoordinateSpace;
 import guttmanlab.core.datastructures.IntervalTree;
 
@@ -19,6 +20,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.commons.collections15.Predicate;
 
@@ -32,9 +34,6 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 	private Collection<Predicate<T>> filters;
 	private int numAnnotations;
 
-	/**
-	 * Empty constructor
-	 */
 	public AbstractAnnotationCollection(){
 		filters=new ArrayList<Predicate<T>>();
 	}
@@ -45,19 +44,21 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 		numAnnotations = 0;
 	}
 	
-	/**
-	 * Add filters
-	 * @param filters Filters to add
-	 */
-	public void addFilter(Collection<Predicate<PairedMappedFragment<SAMFragment>>> filters) {
-		Iterator<Predicate<PairedMappedFragment<SAMFragment>>> iter = filters.iterator();
+	@Override
+	public void addFilter(Collection<Predicate<T>> filters) {
+		Iterator<Predicate<T>> iter = filters.iterator();
 		while(iter.hasNext())
-			filters.add(iter.next());
+			addFilter(iter.next());
 	}
 
 	@Override
 	public Collection<Predicate<T>> getFilters(){
 		return filters;
+	}
+	
+	@Override
+	public void clearFilters(){
+		filters=new ArrayList<Predicate<T>>();
 	}
 
 	@Override
@@ -81,17 +82,17 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 	private <X extends Annotation> AnnotationCollection<DerivedAnnotation<X>> convertFromReferenceSpace(AnnotationCollection<X> readCollection, CoordinateSpace referenceSpace, boolean fullyContained){
 		return new ConvertedSpace<X>(readCollection, this, referenceSpace, fullyContained);
 	}
+
+	
 	
 	@Override
 	public CloseableIterator<? extends PopulatedWindow<T>> getPopulatedWindows(Annotation region, int windowLength){
-		CloseableIterator<T> iter=sortedIterator(region, false);
-		return new WindowIterator<T>(iter, windowLength, region);
+		return getPopulatedWindows(region, windowLength, 1);
 	}
 
 	@Override
 	public CloseableIterator<? extends PopulatedWindow<T>> getPopulatedWindows(Annotation region, int winSize, int stepSize) {
-		CloseableIterator<T> iter=sortedIterator(region, false);
-		return new WindowIterator<T>(iter,winSize,region,stepSize);
+		return getPopulatedWindows(region, winSize, stepSize, false);
 	}	
 	
 	@Override
@@ -103,7 +104,7 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 	@Override
 	public CloseableIterator<? extends PopulatedWindow<T>> getPopulatedWindows(Annotation region, int winSize, int stepSize, boolean includeEmpties) {
 		CloseableIterator<T> iter=sortedIterator(region, false);
-		return new WindowIterator<T>(iter,winSize,region,stepSize,includeEmpties);
+		return new WindowRegionIterator<T>(region, iter,winSize,stepSize);
 	}
 	
 	@Override
@@ -123,30 +124,66 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 		}
 	}
 	
-	@Override
-	public void writeToBAM(String fileName){
-		writeToBAM(fileName, sortedIterator());
-	}
+	
+	
+	
 	
 
-	@Override
-	public void writeToBAM(String fileName, Annotation region, boolean fullyContained){
-		writeToBAM(fileName, sortedIterator(region, fullyContained));
-	}
-	
-	private void writeToBAM(String fileName, CloseableIterator<T> iter){
-		SAMFileHeader header=getReferenceCoordinateSpace().getBAMFileHeader();
-		SAMFileWriter writer=new SAMFileWriterFactory().setCreateIndex(true).makeSAMOrBAMWriter(header, false, new File(fileName));
-			
-		while(iter.hasNext()){
-			T ann=iter.next();
-			writer.addAlignment(ann.getSamRecord(header));
+	public class WindowRegionIterator<T1 extends Annotation> implements CloseableIterator<PopulatedWindow<T1>>{
+
+		CloseableIterator<PopulatedWindow<T1>> windowIter;
+		
+		
+		public WindowRegionIterator(Annotation region, CloseableIterator<T1> reads, int windowLength, int stepSize){
+			FeatureCollection<PopulatedWindow<T1>> windows=convert(region.getWindows(windowLength, stepSize));
+			formWindows(windows, reads);
 		}
-		writer.close();
-		iter.close();
+		
+		private FeatureCollection<PopulatedWindow<T1>> convert(AnnotationCollection<DerivedAnnotation<? extends Annotation>> windows) {
+			FeatureCollection<PopulatedWindow<T1>> rtrn=new FeatureCollection<PopulatedWindow<T1>>();
+			
+			CloseableIterator<DerivedAnnotation<? extends Annotation>> iter=windows.sortedIterator();
+			while(iter.hasNext()){
+				DerivedAnnotation<? extends Annotation> window=iter.next();
+				PopulatedWindow<T1> pw=new BlockedWindow<T1>(window);
+				rtrn.add(pw);
+			}
+			return rtrn;
+		}
+
+		private void formWindows(FeatureCollection<PopulatedWindow<T1>> windows, CloseableIterator<T1> reads) {
+			while(reads.hasNext()){
+				T1 read=reads.next();
+				CloseableIterator<PopulatedWindow<T1>> iter=windows.sortedIterator(read, false);
+				while(iter.hasNext()){
+					PopulatedWindow<T1> window=iter.next();
+					if(window.getOrientation().equals(read.getOrientation()) || window.getOrientation().equals(Strand.BOTH)){
+						window.addAnnotation(read);
+					}
+				}
+			}
+			this.windowIter=windows.sortedIterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return windowIter.hasNext();
+		}
+
+		@Override
+		public PopulatedWindow<T1> next() {
+			return windowIter.next();
+		}
+
+		@Override
+		public void close() {
+			windowIter.close();
+		}
+		
+		
+		
 	}
 	
-
 
 	/**
 	 * This class requires that you have a sorted iterator of reads
@@ -154,6 +191,14 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 	 *
 	 * @param <T1>
 	 */
+	/**
+	 * This class requires that you have a sorted iterator of reads
+	 * @author mguttman
+	 *
+	 * @param <T1>
+	 */
+	
+	
 	public class WindowIterator<T1 extends Annotation> implements CloseableIterator<PopulatedWindow<T1>>{
 
 		IntervalTree<PopulatedWindow<T1>> windows;
@@ -378,5 +423,15 @@ public abstract class AbstractAnnotationCollection<T extends Annotation> impleme
 		return this.numAnnotations;
 	}
 	
-	
+	@Override
+	public Collection<Annotation> toCollection(){
+		Collection<Annotation> rtrn=new TreeSet<Annotation>();
+		
+		CloseableIterator<T> iter=this.sortedIterator();
+		while(iter.hasNext()) {
+			rtrn.add(iter.next());
+		}
+		
+		return rtrn;
+	}
 }
