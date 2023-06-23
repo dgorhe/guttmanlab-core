@@ -43,7 +43,7 @@ public class CountPerBin {
 			//TODO make sure read is good
 			//if(!record.getMateUnmappedFlag()) {
 				SAMFragment f=new SAMFragment(record);
-				Collection<SingleInterval> allBins=f.getSingleInterval().allBins(binSize);
+				Collection<SingleInterval> allBins = SAMFragment.getSingleInterval(record).allBins(binSize);
 						
 				for(SingleInterval binned: allBins) {
 					binned.setOrientation(f.getOrientation());
