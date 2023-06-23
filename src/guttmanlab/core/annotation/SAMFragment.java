@@ -2,6 +2,7 @@ package guttmanlab.core.annotation;
 
 import guttmanlab.core.annotation.predicate.ReadFlag;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
+import guttmanlab.core.annotation.MappedFragment;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -539,6 +540,186 @@ public class SAMFragment implements MappedFragment{
 	public int hashCode()
 	{
 		return AnnotationHelper.hashCode(this);
+	}
+
+	@Override
+	public SingleInterval bin(int resolution) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'bin'");
+	}
+
+	@Override
+	public boolean overlaps(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'overlaps'");
+	}
+
+	@Override
+	public boolean contains(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'contains'");
+	}
+
+	@Override
+	public Annotation merge(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'merge'");
+	}
+
+	@Override
+	public Annotation minus(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'minus'");
+	}
+
+	@Override
+	public Annotation intersect(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'intersect'");
+	}
+
+	@Override
+	public Collection<Annotation> getBlockSet() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getBlockSet'");
+	}
+
+	@Override
+	public Collection<Annotation> getIntrons() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getIntrons'");
+	}
+
+	@Override
+	public String toBED() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toBED'");
+	}
+
+	@Override
+	public String toBED(double score) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toBED'");
+	}
+
+	@Override
+	public String toBED(int r, int g, int b) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toBED'");
+	}
+
+	@Override
+	public String toBED(int r, int g, int b, double score) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toBED'");
+	}
+
+	@Override
+	public String toUCSC() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toUCSC'");
+	}
+
+	@Override
+	public Annotation convertToReferenceSpace(Annotation featureAnnotation) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'convertToReferenceSpace'");
+	}
+
+	@Override
+	public Annotation convert(Annotation feature) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'convert'");
+	}
+
+	@Override
+	public Collection<Annotation> getSplicedWindows(int binSize) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getSplicedWindows'");
+	}
+
+	@Override
+	public Collection<Annotation> getExonIntronJunctionWindows(int binSize) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getExonIntronJunctionWindows'");
+	}
+
+	@Override
+	public htsjdk.samtools.SAMRecord getSamRecord(htsjdk.samtools.SAMFileHeader header) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getSamRecord'");
+	}
+
+	@Override
+	public boolean fullyContained(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'fullyContained'");
+	}
+
+	@Override
+	public Annotation trim(int start, int end) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'trim'");
+	}
+
+	@Override
+	public int compareTo(Annotation other) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'compareTo'");
+	}
+
+	@Override
+	public String toUCSC(Strand orientation) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toUCSC'");
+	}
+
+	@Override
+	public int get3PrimePosition() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'get3PrimePosition'");
+	}
+
+	@Override
+	public int get5PrimePosition() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'get5PrimePosition'");
+	}
+
+	@Override
+	public boolean isWithinBlock(int position) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'isWithinBlock'");
+	}
+
+	@Override
+	public int getGenomicLength() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getGenomicLength'");
+	}
+
+	@Override
+	public Collection<Annotation> getExonIntronPairs() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getExonIntronPairs'");
+	}
+
+	@Override
+	public SingleInterval getSingleInterval() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getSingleInterval'");
+	}
+
+	@Override
+	public String tobedgraph(double score) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'tobedgraph'");
+	}
+
+	@Override
+	public String toBlocks() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'toBlocks'");
 	}
 
 
