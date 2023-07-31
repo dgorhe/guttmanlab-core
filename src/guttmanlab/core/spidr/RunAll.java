@@ -134,7 +134,7 @@ public class RunAll {
 		}
 		cmd+=" "+save;
 		
-		cmd="srun --nodes=1 --time=24:00:00 --mem=16GB --job-name="+name+ " --output stdout"+name+" --error sterr"+name+ " "+cmd;
+		cmd="srun --nodes=1 --time=24:00:00 --mem=16GB --job-name="+name+ " --output stdout "+name+" --error sterr "+name+ " "+cmd;
 		
 		Runtime.getRuntime().exec(cmd);	
 		System.out.println(cmd);

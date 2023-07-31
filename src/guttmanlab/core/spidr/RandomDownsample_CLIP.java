@@ -76,7 +76,7 @@ public class RandomDownsample_CLIP {
 			
 			SAMFragment f=new SAMFragment(record);
 			//SingleInterval binned=f.getSingleInterval().bin(binSize);
-			Collection<SingleInterval> allBins=f.getSingleInterval().allBins(binSize);
+			Collection<SingleInterval> allBins = SAMFragment.getSingleInterval(record).allBins(binSize);
 			
 			for(SingleInterval binned: allBins) {
 				binned.setOrientation(f.getOrientation());
